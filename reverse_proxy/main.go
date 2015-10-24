@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	}
 }
 
-func handleLoginStage(stream protocol.Stream) {
+func handleLoginStage(stream protocol.Stream, ipAddr string) {
 	for {
 		packetStream, _, err := stream.GetPacketStream()
 		if err != nil {
@@ -49,13 +50,22 @@ func handleLoginStage(stream protocol.Stream) {
 		log.Println("[LOGIN] Received packet with ID:", packetId)
 
 		if packetId == 0 {
-			data, err := packetStream.ReadString()
+			username, err := packetStream.ReadString()
 			if err != nil {
 				log.Println("[LOGIN] Failed to read username:", err)
 				return
 			}
 
-			log.Println("[LOGIN] Connection request:", data)
+			log.Println("[LOGIN] Connection request:", username)
+
+			err = ping.RejectWithMessage(stream,
+				"Hey there! This is a test server made by 1lann.\n"+
+					"I can see you're logging in as "+username+"\n"+
+					"and your IP address is "+ipAddr)
+			if err != nil {
+				log.Println("[LOGIN] Error while rejecting:", err)
+				return
+			}
 		}
 	}
 }
@@ -63,12 +73,14 @@ func handleLoginStage(stream protocol.Stream) {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
+	ipAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
+
 	stream := protocol.NewStream(conn)
 
 	hasHandshake := false
 
 	for {
-		packetStream, _, err := stream.GetPacketStream()
+		packetStream, length, err := stream.GetPacketStream()
 		if err != nil {
 			if err == io.EOF {
 				return
@@ -86,7 +98,7 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 		log.Println("Received packet with ID:", packetId)
-		if packetId == 0 {
+		if packetId == 0 && length > 4 {
 			pingPacket, err := ping.ReadHandshakePacket(wrappedStream)
 			if err != nil {
 				log.Println("Ping packet read error:", err)
@@ -98,14 +110,15 @@ func handleConnection(conn net.Conn) {
 				log.Println("Receive ping packet:", pingPacket)
 				hasHandshake = true
 
-				err = ping.WriteHandshakeResponse(wrappedStream, 30, "Status: This is a test!")
+				err = ping.WriteHandshakeResponse(wrappedStream, 420,
+					"Your IP is: "+ipAddr)
 				if err != nil {
 					log.Println(err)
 				}
 			} else if pingPacket.NextState == 2 {
 				// Start login process
 				packetStream.ExhaustPacket()
-				handleLoginStage(stream)
+				handleLoginStage(stream, ipAddr)
 			}
 		} else if packetId == 1 {
 			err := ping.HandlePingPacket(wrappedStream)

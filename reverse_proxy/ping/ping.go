@@ -60,7 +60,7 @@ func WriteHandshakeResponse(s protocol.Stream, maxPlayers int,
 		},
 		Players: Players{
 			Max:    maxPlayers,
-			Online: 0,
+			Online: 9001,
 		},
 		Description: ChatMessage{
 			Text: statusMessage,
@@ -85,6 +85,21 @@ func HandlePingPacket(s protocol.Stream) error {
 	}
 	responsePacket := protocol.NewPacketWithId(0x01)
 	responsePacket.WriteInt64(time)
+	err = s.WritePacket(responsePacket)
+	return err
+}
+
+func RejectWithMessage(s protocol.Stream, message string) error {
+	responsePacket := protocol.NewPacketWithId(0x00)
+
+	chatMessage := ChatMessage{Text: message}
+
+	data, err := json.Marshal(chatMessage)
+	if err != nil {
+		return err
+	}
+
+	responsePacket.WriteString(string(data))
 	err = s.WritePacket(responsePacket)
 	return err
 }
