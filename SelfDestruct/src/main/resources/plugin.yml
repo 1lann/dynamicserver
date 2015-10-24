@@ -1,0 +1,9 @@
+name: SelfDestruct
+main: io.chuie.selfdestruct.SelfDestruct
+version: 0.1
+commands:
+  destruct:
+    description: Stops, saves, and destructs the server.
+    usage: /destruct
+    permission: selfdestruct.destruct
+    permission-message: §4You don't have permission to use this command!
