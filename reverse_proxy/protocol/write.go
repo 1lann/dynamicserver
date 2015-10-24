@@ -1,7 +1,6 @@
-package network
+package protocol
 
 import (
-	"bytes"
 	"encoding/binary"
 )
 
@@ -72,18 +71,23 @@ func (p *Packet) WriteFloat64(data float64) {
 }
 
 func (p *Packet) WriteString(data string) {
-	_ = binary.PutVarint(p, int64(len(data)))
+	p.WriteVarInt(len(data))
 	p.Data = append(p.Data, []byte(data)...)
 }
 
 func (p *Packet) WriteVarInt(data int) {
-	result := make([]byte, 10)
-	numBytes := binary.PutVarint(result, int64(data))
-	p.Data = append(p.Data, result[:numBytes]...)
+	p.WriteVarLong(int64(data))
 }
 
+// Code from thinkofdeath's steven.
 func (p *Packet) WriteVarLong(data int64) {
-	result := make([]byte, 10)
-	numBytes := binary.PutVarint(result, data)
-	p.Data = append(p.Data, result[:numBytes]...)
+	ui := uint64(data)
+	for {
+		if (ui & ^uint64(0x7F)) == 0 {
+			p.Data = append(p.Data, byte(ui))
+			return
+		}
+		p.Data = append(p.Data, byte((ui&0x7F)|0x80))
+		ui >>= 7
+	}
 }
