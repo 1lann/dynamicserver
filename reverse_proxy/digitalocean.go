@@ -116,13 +116,13 @@ func snapshotServer() {
 
 		snapshotTime := time.Now().Unix()
 		_, _, err = doClient.DropletActions.Snapshot(droplet.id,
-			"minecraft_"+strconv.FormatInt(snapshotTime, 10))
+			"minecraft-"+strconv.FormatInt(snapshotTime, 10))
 		if err != nil {
 			log.Println("[Snapshot] Failed to snapshot droplet:", err)
 			continue
 		}
 
-		log.Println("[Snapshot] Created snapshot: minecraft_", snapshotTime)
+		log.Println("[Snapshot] Created snapshot: minecraft-", snapshotTime)
 
 		opt := &godo.ListOptions{
 			Page:    1,
@@ -137,7 +137,7 @@ func snapshotServer() {
 			return
 		}
 		for _, snapshot := range snapshots {
-			if len(snapshot.Name) > 10 && snapshot.Name[:10] == "minecraft_" {
+			if len(snapshot.Name) > 10 && snapshot.Name[:10] == "minecraft-" {
 				value, err := strconv.ParseInt(snapshot.Name[10:], 10, 64)
 				if err != nil {
 					log.Println("[Snapshot] Failed to parse snapshot name: " +
@@ -163,7 +163,7 @@ func snapshotServer() {
 			}
 
 			if earliestIndex >= 0 {
-				log.Println("Removing snapshot: minecraft_",
+				log.Println("Removing snapshot: minecraft-",
 					earliestSnapshot.time)
 				_, err := doClient.Images.Delete(earliestSnapshot.id)
 				if err != nil {
@@ -245,7 +245,7 @@ func restoreServer() {
 			continue
 		}
 		for _, snapshot := range snapshots {
-			if len(snapshot.Name) > 10 && snapshot.Name[:10] == "minecraft_" {
+			if len(snapshot.Name) > 10 && snapshot.Name[:10] == "minecraft-" {
 				value, err := strconv.ParseInt(snapshot.Name[10:], 10, 64)
 				if err != nil {
 					log.Println("[Restore] Failed to parse snapshot name: " +
@@ -266,7 +266,7 @@ func restoreServer() {
 	}
 
 	createRequest := &godo.DropletCreateRequest{
-		Name:   "minecraft_" + strconv.FormatInt(time.Now().Unix(), 10),
+		Name:   "minecraft-" + strconv.FormatInt(time.Now().Unix(), 10),
 		Region: "sgp1",
 		Size:   "1gb",
 		Image: godo.DropletCreateImage{
@@ -298,7 +298,7 @@ func getRunningDroplet() (dropletInfo, error) {
 	var runningDroplet godo.Droplet
 
 	for _, droplet := range droplets {
-		if len(droplet.Name) > 10 && droplet.Name[:10] == "minecraft_" {
+		if len(droplet.Name) > 10 && droplet.Name[:10] == "minecraft-" {
 			runningDroplet = droplet
 			break
 		}
