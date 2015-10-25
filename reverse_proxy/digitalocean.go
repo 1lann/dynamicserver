@@ -90,6 +90,11 @@ func shutdownServer() {
 			continue
 		}
 
+		if droplet.currentState == dropletStateShuttingDown ||
+			droplet.currentState == dropletStateOff {
+			return
+		}
+
 		_, _, err = doClient.DropletActions.Shutdown(droplet.id)
 		if err != nil {
 			log.Println("[Shutdown] Failed to shutdown droplet:", err)
@@ -112,6 +117,10 @@ func snapshotServer() {
 		if err != nil {
 			log.Println("[Snapshot] Failed to get running droplet:", err)
 			continue
+		}
+
+		if droplet.currentState == dropletStateSnapshot {
+			return
 		}
 
 		snapshotTime := time.Now().Unix()
