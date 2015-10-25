@@ -6,12 +6,17 @@ import (
 	"log"
 	"net"
 	"strings"
+	"sync"
 )
 
 var forwardListener net.Listener
 var forwardAddr string
+var connectionLock *sync.Mutex = &sync.Mutex{}
 
 func startBeacon() {
+	connectionLock.Lock()
+	defer connectionLock.Unlock()
+
 	log.Println("[Beacon] Started.")
 	err := handler.Listen("25565")
 	if err != nil {
@@ -26,6 +31,9 @@ func stopBeacon() {
 }
 
 func startForwarder() {
+	connectionLock.Lock()
+	defer connectionLock.Unlock()
+
 	var err error
 	forwardListener, err = net.Listen("tcp", ":25565")
 	if err != nil {
@@ -45,6 +53,7 @@ func startForwarder() {
 			}
 
 			log.Println("[Forwarder] Failed to accept:", err)
+			return
 		}
 
 		go forwardConnection(conn)
