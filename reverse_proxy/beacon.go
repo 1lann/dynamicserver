@@ -14,6 +14,7 @@ var forwardAddr string
 var connectionLock *sync.Mutex = &sync.Mutex{}
 
 func startBeacon() {
+	log.Println("[Beacon] Call to beacon.")
 	connectionLock.Lock()
 	defer connectionLock.Unlock()
 
@@ -31,6 +32,7 @@ func stopBeacon() {
 }
 
 func startForwarder() {
+	log.Println("[Forwarder] Call to forward.")
 	connectionLock.Lock()
 	defer connectionLock.Unlock()
 
@@ -63,7 +65,7 @@ func startForwarder() {
 func forwardConnection(localConn net.Conn) {
 	defer localConn.Close()
 
-	if len(forwardAddr) > 0 {
+	if forwardAddr == "" {
 		return
 	}
 
