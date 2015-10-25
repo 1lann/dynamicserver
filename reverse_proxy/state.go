@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/1lann/beacon/handler"
 	"log"
+	"time"
 )
 
 type state int
@@ -51,6 +52,7 @@ func setState(s state) {
 
 	if s != stateStarted && currentState == stateStarted {
 		stopForwarder()
+		time.Sleep(time.Second)
 		go startBeacon()
 	}
 
@@ -91,6 +93,7 @@ func setState(s state) {
 	case stateStarted:
 		if currentState != stateStarted {
 			stopBeacon()
+			time.Sleep(time.Second)
 			go startForwarder()
 		}
 	}
