@@ -68,7 +68,6 @@ func isMinecraftServerRunning() bool {
 	for i := 0; i < 3; i++ {
 		conn, err := net.Dial("tcp", forwardAddr+":"+commPort)
 		if err != nil {
-			conn.Close()
 			time.Sleep(time.Second)
 			continue
 		}

@@ -17,6 +17,7 @@ const commPort = "9010"
 const masterAddress = "128.199.199.156"
 const runCommand = "screen -dmS minecraft java -Xmx850M -jar /root/spigot/spigot.jar"
 const keyname = "minecraft"
+const workingDirectory = "/root/spigot"
 const flagFile = "/root/spigot/destroy.txt"
 const checkCommand = "screen -list"
 
@@ -38,9 +39,8 @@ func main() {
 	parsedRunCommand := strings.Fields(runCommand)
 
 	cmd := exec.Command(parsedRunCommand[0], parsedRunCommand[1:]...)
-	if err := cmd.Start(); err != nil {
-		log.Fatal("Failed to execute command:", err)
-	}
+	cmd.Dir = workingDirectory
+	_ = cmd.Start()
 
 	go respondState()
 
@@ -59,12 +59,7 @@ func checkState() string {
 	parsedCheckCommand := strings.Fields(checkCommand)
 
 	cmd := exec.Command(parsedCheckCommand[0], parsedCheckCommand[1:]...)
-	response, err := cmd.Output()
-	if err != nil {
-		log.Println("Failed to execute check command:", err)
-		return "stopped"
-	}
-
+	response, _ := cmd.Output()
 	if strings.Contains(string(response), "minecraft") {
 		return "started"
 	}
@@ -82,7 +77,6 @@ func sendState(state string, token string) {
 		conn, err := net.Dial("tcp", masterAddress+":"+commPort)
 		if err != nil {
 			log.Println("Could not connect to master:", err)
-			conn.Close()
 			time.Sleep(time.Second)
 			continue
 		}
