@@ -12,13 +12,13 @@ var forwardListener net.Listener
 var forwardAddr string
 
 func startBeacon() {
-	log.Println("Beacon started.")
+	log.Println("[Beacon] Started.")
 	err := handler.Listen("25565")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Beacon stopped.")
+	log.Println("[Beacon] Stopped.")
 }
 
 func stopBeacon() {
@@ -33,11 +33,14 @@ func startForwarder() {
 		return
 	}
 
+	log.Println("[Forwarder] Started.")
+
 	for {
 		conn, err := forwardListener.Accept()
 		if err != nil {
 			if strings.Contains(err.Error(),
 				"use of closed network connection") || err == io.EOF {
+				log.Println("[Forwarder] Stopped.")
 				return
 			}
 
@@ -61,6 +64,9 @@ func forwardConnection(localConn net.Conn) {
 		return
 	}
 
+	log.Println("[Forwarder] Forwarding " + localConn.RemoteAddr().String() +
+		" to " + remoteConn.RemoteAddr().String())
+
 	defer remoteConn.Close()
 
 	connChannel := make(chan bool)
@@ -76,6 +82,7 @@ func forwardConnection(localConn net.Conn) {
 	}()
 
 	<-connChannel
+	log.Println("[Forwarder] Connection closed.")
 }
 
 func stopForwarder() {
