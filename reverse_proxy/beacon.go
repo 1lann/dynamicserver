@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/1lann/beacon/handler"
+	"io"
 	"log"
 	"net"
+	"strings"
 )
 
 var forwardListener net.Listener
@@ -25,7 +27,7 @@ func stopBeacon() {
 
 func startForwarder() {
 	var err error
-	forwardListener, err = net.Listen(":25565")
+	forwardListener, err = net.Listen("tcp", ":25565")
 	if err != nil {
 		log.Println("[Forwarder] Failed to listen:", err)
 		return
