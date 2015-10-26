@@ -15,10 +15,13 @@ import (
 	"time"
 )
 
+const sshFingerprint = "2e:a9:01:eb:55:f1:21:9f:31:c4:12:5f:1c:16:d6:59"
+
 var doClient *godo.Client
 var doToken string
 var doTokenBytes []byte
 var stateLock *sync.Mutex = &sync.Mutex{}
+var failureWait time.Duration = time.Second * 5
 
 var ErrNotRunning = errors.New("dynamicserver: server not running")
 var ErrUnexpected = errors.New("dynamicserver: unexpected error")
@@ -92,24 +95,28 @@ func shutdownServer() {
 		log.Println("[Shutdown] Attempting to shutdown:", droplet.name)
 		if err != nil {
 			log.Println("[Shutdown] Failed get droplet information:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		if droplet.currentState == dropletStateShuttingDown ||
 			droplet.currentState == dropletStateOff {
+			log.Println("[Shutdown] Droplet already shutting down!")
 			return
 		}
 
 		_, _, err = doClient.DropletActions.Shutdown(droplet.id)
 		if err != nil {
 			log.Println("[Shutdown] Failed to shutdown droplet:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		return
 	}
+
+	log.Println("[Shutdown] Giving up shutdown.")
+	setState(stateUnavailable)
 }
 
 func snapshotServer() {
@@ -122,10 +129,12 @@ func snapshotServer() {
 		droplet, err := getRunningDroplet()
 		if err != nil {
 			log.Println("[Snapshot] Failed to get running droplet:", err)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		if droplet.currentState == dropletStateSnapshot {
+			log.Println("[Snapshot] Snapshot already in progress!")
 			return
 		}
 
@@ -134,11 +143,16 @@ func snapshotServer() {
 			"minecraft-"+strconv.FormatInt(snapshotTime, 10))
 		if err != nil {
 			log.Println("[Snapshot] Failed to snapshot droplet:", err)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		log.Println("[Snapshot] Created snapshot: minecraft-", snapshotTime)
+	}
 
+	log.Println("[Snapshot] Now deleting old snapshots.")
+
+	for i := 0; i < 5; i++ {
 		opt := &godo.ListOptions{
 			Page:    1,
 			PerPage: 100,
@@ -149,7 +163,8 @@ func snapshotServer() {
 		snapshots, _, err := doClient.Images.ListUser(opt)
 		if err != nil {
 			log.Println("[Snapshot] Failed to list snapshots:", err)
-			return
+			time.Sleep(failureWait)
+			continue
 		}
 		for _, snapshot := range snapshots {
 			if len(snapshot.Name) > 10 && snapshot.Name[:10] == "minecraft-" {
@@ -165,8 +180,10 @@ func snapshotServer() {
 			}
 		}
 
-		for len(mcSnapshots) > 3 {
+		deletionAttempts := 0
+		for len(mcSnapshots) > 3 && deletionAttempts < 5 {
 			// Destroy until only 2 snapshots remain.
+			deletionAttempts++
 
 			earliestIndex := -1
 			earliestSnapshot := snapshotInfo{time: time.Now().Unix(), id: 0}
@@ -183,7 +200,8 @@ func snapshotServer() {
 				_, err := doClient.Images.Delete(earliestSnapshot.id)
 				if err != nil {
 					log.Println("[Snapshot] Failed to remove snapshot:", err)
-					break
+					time.Sleep(failureWait)
+					continue
 				}
 
 				mcSnapshots[earliestIndex] = mcSnapshots[len(mcSnapshots)-1]
@@ -191,10 +209,14 @@ func snapshotServer() {
 			}
 		}
 
+		if deletionAttempts >= 5 {
+			log.Println("[Snapshot] Giving up deleting old snapshots.")
+		}
+
 		return
 	}
 
-	log.Println("[Snapshot] Failed to snapshot server!")
+	log.Println("[Snapshot] Giving up finding old snapshots.")
 }
 
 func destroyServer(id int) {
@@ -213,12 +235,14 @@ func destroyServer(id int) {
 		_, err := doClient.Droplets.Delete(id)
 		if err != nil {
 			log.Println("[Destroy] Error while destroying droplet:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		return
 	}
+
+	log.Println("[Destroy] Giving up destroying.")
 }
 
 func restoreServer() {
@@ -238,7 +262,7 @@ func restoreServer() {
 		snapshots, _, err := doClient.Images.ListUser(opt)
 		if err != nil {
 			log.Println("[Restore] Failed to list snapshots:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 		for _, snapshot := range snapshots {
@@ -256,7 +280,7 @@ func restoreServer() {
 			}
 		}
 
-		return
+		break
 	}
 
 	if latestSnapshot.id == 0 {
@@ -273,6 +297,11 @@ func restoreServer() {
 		Image: godo.DropletCreateImage{
 			ID: latestSnapshot.id,
 		},
+		SSHKeys: []godo.DropletCreateSSHKey{
+			godo.DropletCreateSSHKey{
+				Fingerprint: sshFingerprint,
+			},
+		},
 	}
 
 	log.Println("[Restore] Restoring snapshot minecraft-",
@@ -283,7 +312,7 @@ func restoreServer() {
 		droplets, _, err := doClient.Droplets.List(opt)
 		if err != nil {
 			log.Println("[Restore] Failed to get droplet list:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 
@@ -305,12 +334,14 @@ func restoreServer() {
 		_, _, err = doClient.Droplets.Create(createRequest)
 		if err != nil {
 			log.Println("[Restore] Failed to create droplet:", err)
-			time.Sleep(time.Second * 5)
+			time.Sleep(failureWait)
 			continue
 		}
 
 		return
 	}
+
+	log.Println("[Restore] Giving up restoring.")
 }
 
 func getRunningDroplet() (dropletInfo, error) {
