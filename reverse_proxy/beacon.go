@@ -136,13 +136,11 @@ func startBeacon() {
 	connectionLock.Lock()
 	defer connectionLock.Unlock()
 
-	log.Println("[Beacon] Started.")
 	err := handler.Listen("25565")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("[Beacon] Stopped.")
 }
 
 func stopBeacon() {
@@ -160,14 +158,11 @@ func startForwarder() {
 		return
 	}
 
-	log.Println("[Forwarder] Started.")
-
 	for {
 		conn, err := forwardListener.Accept()
 		if err != nil {
 			if strings.Contains(err.Error(),
 				"use of closed network connection") || err == io.EOF {
-				log.Println("[Forwarder] Stopped.")
 				return
 			}
 

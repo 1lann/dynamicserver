@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/1lann/beacon/handler"
 	"github.com/1lann/beacon/ping"
-	"log"
 	"time"
 )
 
