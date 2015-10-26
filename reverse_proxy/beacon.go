@@ -62,22 +62,22 @@ func setState(s state) {
 
 	switch s {
 	case stateInitializing:
-		connectMessage = "Sorry, the server is not ready take requests yet! " +
-			"Wait and try again later."
+		connectMessage = "Sorry, the server is not ready take requests yet!\n\n" +
+			"Try connecting again in a few seconds."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
 			chat.Yellow + "Initializing..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateStopped:
-		connectMessage = "Sorry, the server is intentionally down.\n" +
+		connectMessage = "Sorry, the server is intentionally down.\n\n" +
 			"Contact the server owner for more information."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
 			chat.Red + "Intentionally down"
 		handler.CurrentStatus.ShowConnection = false
 	case stateIdling:
-		connectMessage = "Sorry, the server is currently shutting down. " +
-			"You may start it again when it is completely turned off.\n" +
+		connectMessage = "Sorry, the server is currently shutting down.\n" +
+			"You may start it again when it is completely turned off.\n\n" +
 			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Yellow +
@@ -88,14 +88,14 @@ func setState(s state) {
 		handler.CurrentStatus.Message = "Off"
 		handler.CurrentStatus.ShowConnection = true
 	case stateStarting:
-		connectMessage = "Sorry, the server is still starting up. " +
-			"Try again in a minute."
+		connectMessage = "Sorry, the server is still starting up.\n\n" +
+			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.LightGreen +
 			"Starting up..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateUnavailable:
-		connectMessage = "The server is unavailable due to an error. " +
+		connectMessage = "The server is unavailable due to an error.\n\n" +
 			"Contact the server owner for help."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable"

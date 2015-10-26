@@ -390,6 +390,8 @@ func getRunningDroplet() (dropletInfo, error) {
 		ipAddress: runningDroplet.Networks.V4[0].IPAddress,
 	}
 
+	forwardAddr = runningDropletInfo.ipAddress
+
 	if time.Now().Before(dropletStateImmunity) {
 		runningDropletInfo.currentState = currentDropletState
 		return runningDropletInfo, nil

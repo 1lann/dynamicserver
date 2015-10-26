@@ -75,8 +75,6 @@ func monitorServer() {
 				continue
 			}
 
-			forwardAddr = droplet.ipAddress
-
 			if isMinecraftServerRunning() {
 				setState(stateStarted)
 			} else {
