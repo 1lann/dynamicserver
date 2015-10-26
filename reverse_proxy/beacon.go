@@ -140,7 +140,6 @@ func startBeacon() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func stopBeacon() {
