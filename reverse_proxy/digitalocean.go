@@ -155,6 +155,7 @@ func snapshotServer() {
 
 		setImmuneState(dropletStateSnapshot)
 		log.Println("[Snapshot] Created snapshot: minecraft-", snapshotTime)
+		break
 	}
 
 	log.Println("[Snapshot] Now deleting old snapshots.")
