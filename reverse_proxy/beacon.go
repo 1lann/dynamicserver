@@ -91,7 +91,8 @@ func setState(s state) {
 		handler.CurrentStatus.ShowConnection = false
 	case stateOff:
 		handler.OnConnect = onConnectIdle
-		handler.CurrentStatus.Message = prefixText + "Shutdown. Connect to start."
+		handler.CurrentStatus.Message = prefixText + chat.Gold +
+			"Powered off. Connect to start."
 		handler.CurrentStatus.ShowConnection = true
 	case stateStarting:
 		connectMessage = "Sorry, the server is still starting up.\n\n" +
