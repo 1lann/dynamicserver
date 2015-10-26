@@ -178,11 +178,11 @@ func snapshotServer() {
 			}
 
 			if earliestIndex >= 0 {
-				log.Println("Removing snapshot: minecraft-",
+				log.Println("[Snapshot] Removing snapshot: minecraft-",
 					earliestSnapshot.time)
 				_, err := doClient.Images.Delete(earliestSnapshot.id)
 				if err != nil {
-					log.Println("Failed to remove snapshot:", err)
+					log.Println("[Snapshot] Failed to remove snapshot:", err)
 					break
 				}
 
@@ -232,24 +232,6 @@ func restoreServer() {
 		PerPage: 100,
 	}
 
-	for i := 0; i < 5; i++ {
-		// Safety check: Make sure there aren't more than 4 droplets running.
-		droplets, _, err := doClient.Droplets.List(opt)
-		if err != nil {
-			log.Println("[Restore] Failed to get droplet list:", err)
-			time.Sleep(time.Second * 5)
-			continue
-		}
-
-		if len(droplets) > 4 {
-			// Refuse to create droplet
-			log.Println("[Restore] Too many existing droplets, droplet restoration cancelled.")
-			return
-		} else {
-			break
-		}
-	}
-
 	var latestSnapshot snapshotInfo
 
 	for i := 0; i < 5; i++ {
@@ -273,6 +255,8 @@ func restoreServer() {
 				}
 			}
 		}
+
+		return
 	}
 
 	if latestSnapshot.id == 0 {
@@ -280,8 +264,10 @@ func restoreServer() {
 		return
 	}
 
+	dropletTime := strconv.FormatInt(time.Now().Unix(), 10)
+
 	createRequest := &godo.DropletCreateRequest{
-		Name:   "minecraft-" + strconv.FormatInt(time.Now().Unix(), 10),
+		Name:   "minecraft-" + dropletTime,
 		Region: "sgp1",
 		Size:   "1gb",
 		Image: godo.DropletCreateImage{
@@ -289,13 +275,41 @@ func restoreServer() {
 		},
 	}
 
+	log.Println("[Restore] Restoring snapshot minecraft-",
+		latestSnapshot.time, "as droplet minecraft-"+dropletTime)
+
 	for i := 0; i < 5; i++ {
-		_, _, err := doClient.Droplets.Create(createRequest)
+		// Safety check: Make sure there aren't more than 4 droplets running.
+		droplets, _, err := doClient.Droplets.List(opt)
+		if err != nil {
+			log.Println("[Restore] Failed to get droplet list:", err)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		if len(droplets) > 4 {
+			// Refuse to create droplet
+			log.Println("[Restore] Too many existing droplets, droplet restoration cancelled.")
+			return
+		}
+
+		for _, droplet := range droplets {
+			if len(droplet.Name) > 10 && droplet.Name[:10] == "minecraft-" {
+				log.Println("[Restore] There is an already existing " +
+					"minecraft droplet. Waiting and retrying.")
+				time.Sleep(time.Second * 10)
+				continue
+			}
+		}
+
+		_, _, err = doClient.Droplets.Create(createRequest)
 		if err != nil {
 			log.Println("[Restore] Failed to create droplet:", err)
 			time.Sleep(time.Second * 5)
 			continue
 		}
+
+		return
 	}
 }
 
