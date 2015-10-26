@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/1lann/beacon/chat"
 	"github.com/1lann/beacon/handler"
 	"log"
 )
@@ -20,6 +21,9 @@ const (
 	stateStarting
 	stateUnavailable
 )
+
+const prefixText = chat.Aqua + "[Beacon] " + chat.White
+const headerText = chat.Aqua + "-- [Beacon] --\n" + chat.White
 
 func (s state) String() string {
 	switch s {
@@ -56,37 +60,48 @@ func setState(s state) {
 
 	switch s {
 	case stateInitializing:
-		connectMessage = "Sorry, the server is not ready take requests yet! " +
+		connectMessage = headerText +
+			"Sorry, the server is not ready take requests yet! " +
 			"Wait and try again later."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = "Status: Initializing..."
+		handler.CurrentStatus.Message = prefixText +
+			chat.Yellow + "Initializing..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateStopped:
-		connectMessage = "Sorry, the server is down. Try again later."
+		connectMessage = headerText +
+			"Sorry, the server is intentionally down.\n" +
+			"Contact the server owner for more information."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = "Status: Down"
+		handler.CurrentStatus.Message = prefixText +
+			chat.Red + "Intentionally down"
 		handler.CurrentStatus.ShowConnection = false
 	case stateIdling:
-		connectMessage = "The server is currently idling. " +
-			"You may restart it when it is idle.\n" +
-			"Try again in a minute."
+		connectMessage = headerText +
+			"Sorry, the server is currently shutting down. " +
+			"You may start it again when it is completely turned off.\n" +
+			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = "Status: Idling..."
+		handler.CurrentStatus.Message = prefixText + chat.Yellow +
+			"Shutting down..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateIdle:
 		handler.OnConnect = onConnectIdle
-		handler.CurrentStatus.Message = "Status: Idle"
+		handler.CurrentStatus.Message = "Off"
 		handler.CurrentStatus.ShowConnection = true
 	case stateStarting:
-		connectMessage = "The server is still starting. Try again in a minute."
+		connectMessage = headerText +
+			"Sorry, the server is still starting up. " +
+			"Try again in a minute."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = "Status: Starting..."
+		handler.CurrentStatus.Message = prefixText + chat.LightGreen +
+			"Starting up..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateUnavailable:
-		connectMessage = "The server is unavailable due to an error. " +
+		connectMessage = headerText +
+			"The server is unavailable due to an error. " +
 			"Contact the server owner for help."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = "Status: Unavailable"
+		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable"
 		handler.CurrentStatus.ShowConnection = false
 	case stateStarted:
 		if currentState != stateStarted {
@@ -105,5 +120,5 @@ func onConnectMessage(player *handler.Player) string {
 func onConnectIdle(player *handler.Player) string {
 	log.Println(player.Username + " has started the server.")
 	go restoreServer()
-	return "The server is now starting. Come back in 2 minutes."
+	return headerText + "The server is now starting. Come back in 2 minutes."
 }
