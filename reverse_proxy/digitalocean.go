@@ -298,8 +298,6 @@ func restoreServer() {
 		return
 	}
 
-	dropletTime := strconv.FormatInt(time.Now().Unix(), 10)
-
 	createRequest := &godo.DropletCreateRequest{
 		Name:   "minecraft-automated",
 		Region: "sgp1",
