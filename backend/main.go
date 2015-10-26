@@ -62,11 +62,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	parsedRunCommand := strings.Fields(runCommand)
+	if bytes.Equal(checkState(), stateStopped) {
+		parsedRunCommand := strings.Fields(runCommand)
 
-	cmd := exec.Command(parsedRunCommand[0], parsedRunCommand[1:]...)
-	cmd.Dir = workingDirectory
-	_ = cmd.Start()
+		cmd := exec.Command(parsedRunCommand[0], parsedRunCommand[1:]...)
+		cmd.Dir = workingDirectory
+		_ = cmd.Start()
+	}
 
 	go respondState()
 

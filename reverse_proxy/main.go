@@ -26,7 +26,6 @@ func main() {
 func monitorServer() {
 	for {
 		stateLock.Lock()
-		dropletRunning := false
 		delay := 30
 		droplet, err := getRunningDroplet()
 
@@ -44,31 +43,33 @@ func monitorServer() {
 			continue
 		}
 
-		if droplet.currentState == dropletStateCreate {
+		switch droplet.currentState {
+		case dropletStateCreate:
 			setState(stateStarting)
 			delay = 10
-		} else if droplet.currentState == dropletStateDestroy ||
-			droplet.currentState == dropletStateSnapshot ||
-			droplet.currentState == dropletStateShuttingDown {
-			setState(stateIdling)
+		case dropletStateDestroy:
+			setState(stateDestroy)
+		case dropletStateSnapshot:
+			setState(stateSnapshot)
+			delay = 30
+		case dropletStateShuttingDown:
+			setState(stateShutdown)
 			delay = 10
-		} else if droplet.currentState == dropletStateOff {
-			if currentState == stateIdling {
+		case dropletStateOff:
+			if currentState == stateShutdown {
 				go snapshotServer()
 			} else {
 				setState(stateStopped)
 			}
-		} else if droplet.currentState == dropletStateUnknown {
+		case dropletStateUnknown:
 			setState(stateUnavailable)
-		} else if droplet.currentState == dropletStateActive {
-			dropletRunning = true
-		} else {
+		default:
 			log.Println("Unhandled droplet state:", droplet.currentState)
 			setState(stateUnavailable)
 		}
 
-		if dropletRunning {
-			if currentState == stateIdling {
+		if droplet.currentState == dropletStateActive {
+			if currentState == stateSnapshot {
 				go destroyServer(droplet.id)
 				stateLock.Unlock()
 				time.Sleep(10 * time.Second)

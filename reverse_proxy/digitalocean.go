@@ -92,7 +92,7 @@ func shutdownServer() {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateIdling)
+	setState(stateShutdown)
 	for i := 0; i < 5; i++ {
 		droplet, err := getRunningDroplet()
 		log.Println("[Shutdown] Attempting to shutdown:", droplet.name)
@@ -129,7 +129,7 @@ func snapshotServer() {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateIdling)
+	setState(stateSnapshot)
 	// Will be followed by a destruction
 	for i := 0; i < 5; i++ {
 		droplet, err := getRunningDroplet()
@@ -231,7 +231,7 @@ func destroyServer(id int) {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateIdling)
+	setState(stateDestroy)
 	log.Println("[Destroy] Destroying droplet:", id)
 
 	if id == 3608740 {
@@ -411,7 +411,12 @@ func getRunningDroplet() (dropletInfo, error) {
 
 	if actions[0].Status == "completed" &&
 		runningDroplet.Status == "active" {
-		runningDropletInfo.currentState = dropletStateActive
+		if currentState == stateShutdown {
+			runningDropletInfo.currentState = dropletStateShuttingDown
+		} else {
+			runningDropletInfo.currentState = dropletStateActive
+		}
+
 		return runningDropletInfo, nil
 	}
 
