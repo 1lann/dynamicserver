@@ -63,10 +63,6 @@ func monitorServer() {
 			}
 		case dropletStateUnknown:
 			setState(stateUnavailable)
-		default:
-			log.Println("Unhandled droplet state:", droplet.currentState)
-			setState(stateUnavailable)
-		}
 
 		if droplet.currentState == dropletStateActive {
 			if currentState == stateSnapshot {
