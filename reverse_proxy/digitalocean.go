@@ -23,6 +23,9 @@ var doTokenBytes []byte
 var stateLock *sync.Mutex = &sync.Mutex{}
 var failureWait time.Duration = time.Second * 5
 
+var dropletStateImmunity time.Time
+var currentDropletState int
+
 var ErrNotRunning = errors.New("dynamicserver: server not running")
 var ErrUnexpected = errors.New("dynamicserver: unexpected error")
 var ErrSafetyCheckFail = errors.New("dynamicserver: failed safety check")
@@ -112,6 +115,9 @@ func shutdownServer() {
 			continue
 		}
 
+		setImmuneState(dropletStateShuttingDown)
+		log.Println("[Shutdown] Shutdown successful.")
+
 		return
 	}
 
@@ -147,6 +153,7 @@ func snapshotServer() {
 			continue
 		}
 
+		setImmuneState(dropletStateSnapshot)
 		log.Println("[Snapshot] Created snapshot: minecraft-", snapshotTime)
 	}
 
@@ -239,6 +246,9 @@ func destroyServer(id int) {
 			continue
 		}
 
+		setImmuneState(dropletStateDestroy)
+		log.Println("[Destroy] Destroy successful.")
+
 		return
 	}
 
@@ -304,7 +314,7 @@ func restoreServer() {
 		},
 	}
 
-	log.Println("[Restore] Restoring snapshot minecraft-",
+	log.Println("[Restore] Attempting to restore snapshot minecraft-",
 		latestSnapshot.time, "as droplet minecraft-"+dropletTime)
 
 	for i := 0; i < 5; i++ {
@@ -338,10 +348,18 @@ func restoreServer() {
 			continue
 		}
 
+		setImmuneState(dropletStateSnapshot)
+		log.Println("[Restore] Restore successful.")
+
 		return
 	}
 
 	log.Println("[Restore] Giving up restoring.")
+}
+
+func setImmuneState(dropletState int) {
+	dropletStateImmunity = time.Now().Add(time.Second * 10)
+	currentDropletState = dropletState
 }
 
 func getRunningDroplet() (dropletInfo, error) {
@@ -372,6 +390,11 @@ func getRunningDroplet() (dropletInfo, error) {
 		id:        runningDroplet.ID,
 		name:      runningDroplet.Name,
 		ipAddress: runningDroplet.Networks.V4[0].IPAddress,
+	}
+
+	if time.Now().Before(dropletStateImmunity) {
+		runningDropletInfo.currentState = currentDropletState
+		return runningDropletInfo, nil
 	}
 
 	actions, _, err := doClient.Droplets.Actions(runningDroplet.ID, opt)
