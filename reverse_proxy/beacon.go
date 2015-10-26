@@ -68,14 +68,14 @@ func setState(s state) {
 
 	switch s {
 	case stateInitializing:
-		connectMessage = "Sorry, the server is not ready take requests yet!\n\n" +
+		connectMessage = "Sorry, the server is not ready take requests yet!\n" +
 			"Try connecting again in a few seconds."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
 			chat.Yellow + "Initializing..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateStopped:
-		connectMessage = "Sorry, the server is intentionally down.\n\n" +
+		connectMessage = "Sorry, the server is intentionally down.\n" +
 			"Contact the server owner for more information."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
@@ -83,7 +83,7 @@ func setState(s state) {
 		handler.CurrentStatus.ShowConnection = false
 	case stateShutdown, stateSnapshot, stateDestroy:
 		connectMessage = "Sorry, the server is currently shutting down.\n" +
-			"You may start it again when it is completely turned off.\n\n" +
+			"You may start it again when it is completely turned off.\n" +
 			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Yellow +
@@ -95,14 +95,14 @@ func setState(s state) {
 			"Powered off. Connect to start."
 		handler.CurrentStatus.ShowConnection = true
 	case stateStarting:
-		connectMessage = "Sorry, the server is still starting up.\n\n" +
+		connectMessage = "Sorry, the server is still starting up.\n" +
 			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.LightGreen +
 			"Starting up..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateUnavailable:
-		connectMessage = "The server is unavailable due to an error.\n\n" +
+		connectMessage = "The server is unavailable due to an error.\n" +
 			"Contact the server owner for help."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable"
