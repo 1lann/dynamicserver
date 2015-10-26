@@ -75,9 +75,6 @@ func forwardConnection(localConn net.Conn) {
 		return
 	}
 
-	log.Println("[Forwarder] Forwarding " + localConn.RemoteAddr().String() +
-		" to " + remoteConn.RemoteAddr().String())
-
 	defer remoteConn.Close()
 
 	connChannel := make(chan bool)
@@ -93,7 +90,6 @@ func forwardConnection(localConn net.Conn) {
 	}()
 
 	<-connChannel
-	log.Println("[Forwarder] Connection closed.")
 }
 
 func stopForwarder() {

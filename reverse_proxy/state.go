@@ -49,8 +49,6 @@ func setState(s state) {
 
 	// lastSet := time.Now()
 
-	log.Println("[State] State is:", s)
-
 	if s != stateStarted && currentState == stateStarted {
 		stopForwarder()
 		go startBeacon()

@@ -33,21 +33,22 @@ func handleCommConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	data, err := reader.ReadBytes('\n')
 	if err != nil {
-		log.Println("Error while reading connection:", err)
+		log.Println("[Comm] Error while reading connection:", err)
 		return
 	}
 
 	if strings.Trim(string(data), " \n") != token {
-		log.Println("Invalid token:", string(data))
+		log.Println("[Comm] Invalid token:", string(data))
 		return
 	}
 
 	data, err = reader.ReadBytes('\n')
 	if err != nil && err != io.EOF {
-		log.Println("Error while reading request:", err)
+		log.Println("[Comm] Error while reading request:", err)
 	}
 
 	request := strings.Trim(string(data), " \n")
+	log.Println("[Comm] Receive request:", request)
 	switch request {
 	case "started":
 		forwardAddr = strings.Split(conn.RemoteAddr().String(), ":")[0]
@@ -57,7 +58,7 @@ func handleCommConnection(conn net.Conn) {
 	case "destroy":
 		go shutdownServer()
 	default:
-		log.Println("Unknown request:" + request)
+		log.Println("[Comm] Unknown request:" + request)
 	}
 
 	return
