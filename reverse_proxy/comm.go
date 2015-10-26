@@ -37,7 +37,7 @@ func handleCommConnection(conn net.Conn) {
 
 	remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
 	if remoteAddr != forwardAddr {
-		log.Println("[Comm] Attempt to connect from unknown host:",
+		log.Println("[Comm] Attempted connection from unknown host:",
 			remoteAddr)
 		return
 	}

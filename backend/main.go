@@ -34,6 +34,8 @@ var stateStopped []byte
 var lastState []byte
 
 func main() {
+	_ = os.Remove(flagFile)
+
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatal(err)
@@ -96,7 +98,6 @@ func checkState() []byte {
 }
 
 func sendState(state []byte, token string) {
-	log.Println("Sending state:", state)
 	for i := 0; i < 3; i++ {
 		conn, err := net.Dial("tcp", masterAddress+":"+commPort)
 		if err != nil {
@@ -114,6 +115,7 @@ func sendState(state []byte, token string) {
 		}
 
 		conn.Close()
+		return
 	}
 }
 
