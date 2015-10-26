@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public final class SelfDestruct extends JavaPlugin implements Listener {
-	private static final long waitTime = 300L;
+	private static final long waitTime = 36000L;
 
 	private BukkitTask shutdownTask;
 
