@@ -30,7 +30,7 @@ func monitorServer() {
 		droplet, err := getRunningDroplet()
 
 		if err == ErrNotRunning {
-			setState(stateIdle)
+			setState(stateOff)
 			stateLock.Unlock()
 			time.Sleep(time.Second * 30)
 			continue
