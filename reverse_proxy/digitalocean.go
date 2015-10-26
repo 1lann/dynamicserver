@@ -408,7 +408,8 @@ func getRunningDroplet() (dropletInfo, error) {
 		return runningDropletInfo, ErrUnexpected
 	}
 
-	if runningDroplet.Status == "active" {
+	if actions[0].Status == "completed" &&
+		runningDroplet.Status == "active" {
 		runningDropletInfo.currentState = dropletStateActive
 		return runningDropletInfo, nil
 	}
