@@ -60,24 +60,21 @@ func setState(s state) {
 
 	switch s {
 	case stateInitializing:
-		connectMessage = headerText +
-			"Sorry, the server is not ready take requests yet! " +
+		connectMessage = "Sorry, the server is not ready take requests yet! " +
 			"Wait and try again later."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
 			chat.Yellow + "Initializing..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateStopped:
-		connectMessage = headerText +
-			"Sorry, the server is intentionally down.\n" +
+		connectMessage = "Sorry, the server is intentionally down.\n" +
 			"Contact the server owner for more information."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
 			chat.Red + "Intentionally down"
 		handler.CurrentStatus.ShowConnection = false
 	case stateIdling:
-		connectMessage = headerText +
-			"Sorry, the server is currently shutting down. " +
+		connectMessage = "Sorry, the server is currently shutting down. " +
 			"You may start it again when it is completely turned off.\n" +
 			"Try connecting again in a few minutes."
 		handler.OnConnect = onConnectMessage
@@ -89,16 +86,14 @@ func setState(s state) {
 		handler.CurrentStatus.Message = "Off"
 		handler.CurrentStatus.ShowConnection = true
 	case stateStarting:
-		connectMessage = headerText +
-			"Sorry, the server is still starting up. " +
+		connectMessage = "Sorry, the server is still starting up. " +
 			"Try again in a minute."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.LightGreen +
 			"Starting up..."
 		handler.CurrentStatus.ShowConnection = false
 	case stateUnavailable:
-		connectMessage = headerText +
-			"The server is unavailable due to an error. " +
+		connectMessage = "The server is unavailable due to an error. " +
 			"Contact the server owner for help."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable"
@@ -114,7 +109,7 @@ func setState(s state) {
 }
 
 func onConnectMessage(player *handler.Player) string {
-	return connectMessage
+	return headerText + connectMessage
 }
 
 func onConnectIdle(player *handler.Player) string {

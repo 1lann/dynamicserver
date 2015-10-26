@@ -301,7 +301,7 @@ func restoreServer() {
 	dropletTime := strconv.FormatInt(time.Now().Unix(), 10)
 
 	createRequest := &godo.DropletCreateRequest{
-		Name:   "minecraft-" + dropletTime,
+		Name:   "minecraft-automated",
 		Region: "sgp1",
 		Size:   "1gb",
 		Image: godo.DropletCreateImage{
@@ -315,7 +315,7 @@ func restoreServer() {
 	}
 
 	log.Println("[Restore] Attempting to restore snapshot minecraft-",
-		latestSnapshot.time, "as droplet minecraft-"+dropletTime)
+		latestSnapshot.time)
 
 	for i := 0; i < 5; i++ {
 		// Safety check: Make sure there aren't more than 4 droplets running.
@@ -333,7 +333,7 @@ func restoreServer() {
 		}
 
 		for _, droplet := range droplets {
-			if len(droplet.Name) > 10 && droplet.Name[:10] == "minecraft-" {
+			if droplet.Name == "minecraft-automated" {
 				log.Println("[Restore] There is an already existing " +
 					"minecraft droplet. Waiting and retrying.")
 				time.Sleep(time.Second * 10)
@@ -376,7 +376,7 @@ func getRunningDroplet() (dropletInfo, error) {
 	var runningDroplet godo.Droplet
 
 	for _, droplet := range droplets {
-		if len(droplet.Name) > 10 && droplet.Name[:10] == "minecraft-" {
+		if droplet.Name == "minecraft-automated" {
 			runningDroplet = droplet
 			break
 		}
