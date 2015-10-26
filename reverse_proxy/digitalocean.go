@@ -190,7 +190,7 @@ func snapshotServer() {
 		}
 
 		deletionAttempts := 0
-		for len(mcSnapshots) > 3 && deletionAttempts < 5 {
+		for len(mcSnapshots) > 2 && deletionAttempts < 5 {
 			// Destroy until only 2 snapshots remain.
 			deletionAttempts++
 
