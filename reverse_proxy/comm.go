@@ -40,6 +40,11 @@ func handleCommConnection(conn net.Conn) {
 		return
 	}
 
+	if currentState == stateDestroy || currentState == stateSnapshot {
+		// Ignore request, you're about to be crushed!
+		return
+	}
+
 	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
 	data, err := ioutil.ReadAll(conn)
