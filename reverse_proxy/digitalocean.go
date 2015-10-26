@@ -92,7 +92,7 @@ func shutdownServer() {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateShutdown)
+	setState(stateStartShutdown)
 	for i := 0; i < 5; i++ {
 		droplet, err := getRunningDroplet()
 		log.Println("[Shutdown] Attempting to shutdown:", droplet.name)
@@ -115,6 +115,7 @@ func shutdownServer() {
 			continue
 		}
 
+		setState(stateShutdown)
 		setImmuneState(dropletStateShuttingDown)
 		log.Println("[Shutdown] Shutdown successful.")
 
@@ -129,7 +130,6 @@ func snapshotServer() {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateSnapshot)
 	// Will be followed by a destruction
 	for i := 0; i < 5; i++ {
 		droplet, err := getRunningDroplet()
@@ -153,6 +153,7 @@ func snapshotServer() {
 			continue
 		}
 
+		setState(stateSnapshot)
 		setImmuneState(dropletStateSnapshot)
 		log.Println("[Snapshot] Created snapshot: minecraft-", snapshotTime)
 		break
@@ -231,7 +232,6 @@ func destroyServer(id int) {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
-	setState(stateDestroy)
 	log.Println("[Destroy] Destroying droplet:", id)
 
 	if id == 3608740 {
@@ -247,6 +247,7 @@ func destroyServer(id int) {
 			continue
 		}
 
+		setState(stateDestroy)
 		setImmuneState(dropletStateDestroy)
 		log.Println("[Destroy] Destroy successful.")
 
@@ -254,6 +255,7 @@ func destroyServer(id int) {
 	}
 
 	log.Println("[Destroy] Giving up destroying.")
+	setState(stateUnavailable)
 }
 
 func restoreServer() {

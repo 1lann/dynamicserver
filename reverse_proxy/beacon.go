@@ -18,6 +18,7 @@ const (
 	stateInitializing = iota
 	stateStopped
 	stateOff
+	stateStartShutdown
 	stateShutdown
 	stateSnapshot
 	stateDestroy
@@ -39,6 +40,8 @@ func (s state) String() string {
 		return "Off"
 	case stateSnapshot:
 		return "Snapshot"
+	case stateStartShutdown:
+		return "Start Shutdown"
 	case stateShutdown:
 		return "Shutdown"
 	case stateDestroy:
@@ -81,7 +84,7 @@ func setState(s state) {
 		handler.CurrentStatus.Message = prefixText +
 			chat.Red + "Intentionally down"
 		handler.CurrentStatus.ShowConnection = false
-	case stateShutdown, stateSnapshot, stateDestroy:
+	case stateShutdown, stateSnapshot, stateDestroy, stateStartShutdown:
 		connectMessage = "Sorry, the server is currently shutting down.\n" +
 			"You may start it again when it is completely powered off."
 		handler.OnConnect = onConnectMessage
