@@ -83,8 +83,7 @@ func setState(s state) {
 		handler.CurrentStatus.ShowConnection = false
 	case stateShutdown, stateSnapshot, stateDestroy:
 		connectMessage = "Sorry, the server is currently shutting down.\n" +
-			"You may start it again when it is completely turned off.\n" +
-			"Try connecting again in a few minutes."
+			"You may start it again when it is completely powered off."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText + chat.Yellow +
 			"Shutting down..."
