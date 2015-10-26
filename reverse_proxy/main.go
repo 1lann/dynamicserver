@@ -63,6 +63,7 @@ func monitorServer() {
 			}
 		case dropletStateUnknown:
 			setState(stateUnavailable)
+		}
 
 		if droplet.currentState == dropletStateActive {
 			if currentState == stateSnapshot {
