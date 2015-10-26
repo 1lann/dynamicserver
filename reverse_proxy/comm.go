@@ -1,8 +1,13 @@
 package main
 
 import (
-	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"strings"
@@ -30,24 +35,28 @@ func runCommDaemon() {
 func handleCommConnection(conn net.Conn) {
 	defer conn.Close()
 
-	reader := bufio.NewReader(conn)
-	data, err := reader.ReadBytes('\n')
+	remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
+	if remoteAddr != forwardAddr {
+		log.Println("[Comm] Attempt to connect from unknown host:",
+			remoteAddr)
+		return
+	}
+
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+
+	data, err := ioutil.ReadAll(conn)
 	if err != nil {
-		log.Println("[Comm] Error while reading connection:", err)
+		log.Println("[Comm] Error receiving request from remote:", err)
 		return
 	}
 
-	if strings.Trim(string(data), " \n") != token {
-		log.Println("[Comm] Invalid token:", string(data))
+	decryptedData, err := decrypt(doTokenBytes, data)
+	if err != nil {
+		log.Println("[Comm] Decryption failed.")
 		return
 	}
 
-	data, err = reader.ReadBytes('\n')
-	if err != nil && err != io.EOF {
-		log.Println("[Comm] Error while reading request:", err)
-	}
-
-	request := strings.Trim(string(data), " \n")
+	request := string(decryptedData)
 	log.Println("[Comm] Receive request:", request)
 	switch request {
 	case "started":
@@ -69,27 +78,28 @@ func isMinecraftServerRunning() bool {
 	for i := 0; i < 3; i++ {
 		conn, err := net.Dial("tcp", forwardAddr+":"+commPort)
 		if err != nil {
+			log.Println("[Comm] Error connecting to remote:", err)
 			time.Sleep(time.Second)
 			continue
 		}
 
-		_, err = conn.Write([]byte("status\n"))
+		conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+
+		data, err := ioutil.ReadAll(conn)
 		if err != nil {
-			conn.Close()
-			time.Sleep(time.Second)
-			continue
+			log.Println("[Comm] Error pinging remote:", err)
+			return false
 		}
 
-		reader := bufio.NewReader(conn)
-		data, err := reader.ReadBytes('\n')
-		if err != nil && err != io.EOF {
-			conn.Close()
-			time.Sleep(time.Second)
-			continue
+		decryptedData, err := decrypt(doTokenBytes, data)
+		if err != nil {
+			log.Println("[Comm] Decryption failed.")
+			return false
 		}
 
-		response := strings.Trim(string(data), " \n")
 		conn.Close()
+
+		response := string(decryptedData)
 		if response == "started" {
 			return true
 		} else {
@@ -98,4 +108,41 @@ func isMinecraftServerRunning() bool {
 	}
 
 	return false
+}
+
+// Encrypt and decrypt functions from
+// http://stackoverflow.com/questions/18817336/golang-encrypting-a-string-with-aes-and-base64
+func encrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	b := base64.StdEncoding.EncodeToString(text)
+	ciphertext := make([]byte, aes.BlockSize+len(b))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	cfb := cipher.NewCFBEncrypter(block, iv)
+	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
+	return ciphertext, nil
+}
+
+func decrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(text) < aes.BlockSize {
+		return nil, errors.New("ciphertext too short")
+	}
+	iv := text[:aes.BlockSize]
+	text = text[aes.BlockSize:]
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(text, text)
+	data, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

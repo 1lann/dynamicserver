@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"errors"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
@@ -15,7 +16,8 @@ import (
 )
 
 var doClient *godo.Client
-var token string
+var doToken string
+var doTokenBytes []byte
 var stateLock *sync.Mutex = &sync.Mutex{}
 
 var ErrNotRunning = errors.New("dynamicserver: server not running")
@@ -66,10 +68,14 @@ func loadDoClient() {
 		log.Fatal(err)
 	}
 
-	token = strings.Trim(string(fileData), " \n")
+	doToken = strings.Trim(string(fileData), " \n")
+	doTokenBytes, err = hex.DecodeString(doToken)
+	if err != nil {
+		log.Fatal("[Token] WARNING: Failed to decode token!")
+	}
 
 	tokenSource := &TokenSource{
-		AccessToken: token,
+		AccessToken: doToken,
 	}
 
 	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)

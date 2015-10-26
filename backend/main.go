@@ -1,7 +1,13 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -21,7 +27,11 @@ const workingDirectory = "/root/spigot"
 const flagFile = "/root/spigot/destroy.txt"
 const checkCommand = "screen -list"
 
-var lastState = ""
+var stateStarted []byte
+var stateDestory []byte
+var stateStopped []byte
+
+var lastState []byte
 
 func main() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -35,6 +45,20 @@ func main() {
 	}
 
 	token := strings.Trim(string(fileData), " \n")
+	byteToken, err := hex.DecodeString(token)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if stateStarted, err = encrypt(byteToken, []byte("started")); err != nil {
+		log.Fatal(err)
+	}
+	if stateDestory, err = encrypt(byteToken, []byte("destroy")); err != nil {
+		log.Fatal(err)
+	}
+	if stateStopped, err = encrypt(byteToken, []byte("stopped")); err != nil {
+		log.Fatal(err)
+	}
 
 	parsedRunCommand := strings.Fields(runCommand)
 
@@ -46,7 +70,7 @@ func main() {
 
 	for {
 		newState := checkState()
-		if newState != lastState {
+		if !bytes.Equal(newState, lastState) {
 			sendState(newState, token)
 			lastState = newState
 		}
@@ -55,23 +79,23 @@ func main() {
 	}
 }
 
-func checkState() string {
+func checkState() []byte {
 	parsedCheckCommand := strings.Fields(checkCommand)
 
 	cmd := exec.Command(parsedCheckCommand[0], parsedCheckCommand[1:]...)
 	response, _ := cmd.Output()
 	if strings.Contains(string(response), "minecraft") {
-		return "started"
+		return stateStarted
 	}
 
 	if _, err := os.Stat(flagFile); !os.IsNotExist(err) {
-		return "destroy"
+		return stateDestory
 	}
 
-	return "stopped"
+	return stateStopped
 }
 
-func sendState(state string, token string) {
+func sendState(state []byte, token string) {
 	log.Println("Sending state:", state)
 	for i := 0; i < 3; i++ {
 		conn, err := net.Dial("tcp", masterAddress+":"+commPort)
@@ -81,7 +105,7 @@ func sendState(state string, token string) {
 			continue
 		}
 
-		_, err = conn.Write([]byte(token + "\n" + state + "\n"))
+		_, err = conn.Write(state)
 		if err != nil {
 			log.Println("Could not send message to master:", err)
 			conn.Close()
@@ -108,22 +132,47 @@ func respondState() {
 		go func(conn net.Conn) {
 			defer conn.Close()
 
-			reader := bufio.NewReader(conn)
-			data, err := reader.ReadBytes('\n')
-			if err != nil && err != io.EOF {
-				log.Println("Failed to read request:", err)
-			}
-
-			request := strings.Trim(string(data), " \n")
-			if request != "status" {
-				log.Println("Received unknown request:", request)
-				return
-			}
-
-			_, err = conn.Write([]byte(lastState + "\n"))
+			_, err = conn.Write(lastState)
 			if err != nil {
 				log.Println("Failed to write response:", err)
 			}
 		}(conn)
 	}
+}
+
+// Encrypt and decrypt functions from
+// http://stackoverflow.com/questions/18817336/golang-encrypting-a-string-with-aes-and-base64
+func encrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	b := base64.StdEncoding.EncodeToString(text)
+	ciphertext := make([]byte, aes.BlockSize+len(b))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	cfb := cipher.NewCFBEncrypter(block, iv)
+	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
+	return ciphertext, nil
+}
+
+func decrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(text) < aes.BlockSize {
+		return nil, errors.New("ciphertext too short")
+	}
+	iv := text[:aes.BlockSize]
+	text = text[aes.BlockSize:]
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(text, text)
+	data, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
