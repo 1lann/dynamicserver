@@ -17,6 +17,7 @@ func main() {
 	go startBeacon()
 	setState(stateInitializing)
 	loadDoClient()
+	loadWhitelist()
 
 	go monitorServer()
 	runCommDaemon()

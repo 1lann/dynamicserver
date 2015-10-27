@@ -43,7 +43,7 @@ func main() {
 
 	fileData, err := ioutil.ReadFile(dir + "/token.txt")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("token.txt read error:", err)
 	}
 
 	token := strings.Trim(string(fileData), " \n")

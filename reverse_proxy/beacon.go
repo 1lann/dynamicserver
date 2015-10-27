@@ -4,8 +4,11 @@ import (
 	"github.com/1lann/beacon/chat"
 	"github.com/1lann/beacon/handler"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -119,11 +122,43 @@ func setState(s state) {
 	currentState = s
 }
 
+var whitelist map[string]bool
+
+func loadWhitelist() {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fileData, err := ioutil.ReadFile(dir + "/whitelist.txt")
+	if err != nil {
+		log.Fatal("whitelist.txt read error:", err)
+	}
+
+	usernames := strings.Split(string(fileData), "\n")
+	for _, username := range usernames {
+		if username != "" {
+			whitelist[normalizeName(username)] = true
+		}
+	}
+}
+
+func normalizeName(name string) string {
+	return strings.ToLower(strings.Replace(name, " ", "", -1))
+}
+
 func onConnectMessage(player *handler.Player) string {
 	return headerText + connectMessage
 }
 
 func onConnectIdle(player *handler.Player) string {
+	if _, found := whitelist[normalizeName(player.Username)]; !found {
+		log.Println(player.Username +
+			" is not whitelisted and attempted to start the server.")
+		return headerText +
+			"Sorry, you are not whitelisted to start the server!"
+	}
+
 	log.Println(player.Username + " has started the server.")
 	go restoreServer()
 	return headerText +

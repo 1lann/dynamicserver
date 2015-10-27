@@ -71,7 +71,7 @@ func loadDoClient() {
 
 	fileData, err := ioutil.ReadFile(dir + "/token.txt")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("token.txt read error:", err)
 	}
 
 	doToken = strings.Trim(string(fileData), " \n")
