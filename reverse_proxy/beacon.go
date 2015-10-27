@@ -122,7 +122,7 @@ func setState(s state) {
 	currentState = s
 }
 
-var whitelist map[string]bool
+var whitelist map[string]bool = make(map[string]bool)
 
 func loadWhitelist() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
