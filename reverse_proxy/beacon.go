@@ -85,7 +85,7 @@ func setState(s state) {
 			"Contact Chuie for more information."
 		handler.OnConnect = onConnectMessage
 		handler.CurrentStatus.Message = prefixText +
-			chat.Red + "Intentionally down"
+			chat.Red + "Intentionally down."
 		handler.CurrentStatus.ShowConnection = false
 	case stateShutdown, stateSnapshot, stateDestroy, stateStartShutdown:
 		connectMessage = "Sorry, the server is currently shutting down.\n" +
@@ -110,7 +110,7 @@ func setState(s state) {
 		connectMessage = "The server is unavailable due to an error.\n" +
 			"Contact Chuie for help."
 		handler.OnConnect = onConnectMessage
-		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable"
+		handler.CurrentStatus.Message = prefixText + chat.Red + "Unavailable."
 		handler.CurrentStatus.ShowConnection = false
 	case stateStarted:
 		if currentState != stateStarted {
