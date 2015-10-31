@@ -45,11 +45,11 @@ func (s state) String() string {
 }
 
 func (s *Server) SetState(st state) {
-	if st == s.State {
+	if st == s.State && s.State != stateInitializing {
 		return
 	}
 
-	if st != stateStarted && s.State == stateStarted || s.State == stateOff {
+	if s.State == stateStarted || s.State == stateOff {
 		handler.Handle(s.Hostnames, s.ResponseHandler)
 	}
 
