@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"github.com/1lann/beacon/protocol"
 	"io"
 	"io/ioutil"
 	"net"
@@ -25,6 +26,7 @@ func (s *Server) IsMinecraftServerRunning() bool {
 	}
 
 	defer conn.Close()
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
 	data, err := ioutil.ReadAll(conn)
 	if err != nil {
@@ -38,6 +40,37 @@ func (s *Server) IsMinecraftServerRunning() bool {
 	}
 
 	if string(decrypted) == "started" {
+		return true
+	}
+
+	return false
+}
+
+func (s *Server) IsMinecraftServerResponding() bool {
+	conn, err := net.Dial("tcp", s.IPAddress+":25565")
+	if err != nil {
+		return false
+	}
+
+	defer conn.Close()
+
+	stream := protocol.NewStream(conn)
+	handshake := protocol.NewPacketWithId(0x00)
+	handshake.WriteVarInt(5)
+	handshake.WriteString(s.IPAddress)
+	handshake.WriteUInt16(25565)
+	handshake.WriteVarInt(1)
+	if err := stream.WritePacket(handshake); err != nil {
+		return false
+	}
+
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	_, length, err := stream.GetPacketStream()
+	if err != nil {
+		return false
+	}
+
+	if length > 5 {
 		return true
 	}
 

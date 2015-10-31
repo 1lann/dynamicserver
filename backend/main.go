@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -19,96 +19,118 @@ import (
 	"time"
 )
 
-const commPort = "9010"
-const masterAddress = "128.199.199.156"
-const runCommand = "screen -dmS minecraft java -Xmx850M -jar /root/spigot/spigot.jar"
-const keyname = "minecraft"
-const workingDirectory = "/root/spigot"
-const flagFile = "/root/spigot/destroy.txt"
-const checkCommand = "screen -list"
+const (
+	stateStarted = "started"
+	stateStopped = "stopped"
+)
 
-var stateStarted []byte
-var stateDestory []byte
-var stateStopped []byte
+var currentState string
+var config Config
+var isStopping bool
 
-var lastState []byte
+type Config struct {
+	Check struct {
+		Command  string `json:"command"`
+		Contains string `json:"contains"`
+	} `json:"check"`
+	MasterAddress      string `json:"master_address"`
+	CommunicationsPort string `json:"communications_port"`
+	EncryptionKey      string `json:"encryption_key"`
+	StartCommand       string `json:"start_command"`
+	StopCommand        string `json:"stop_command"`
+	WorkingDirectory   string `json:"working_directory"`
+	EncryptionKeyBytes []byte `json:"-"`
+}
 
 func main() {
-	_ = os.Remove(flagFile)
-
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fileData, err := ioutil.ReadFile(dir + "/token.txt")
-	if err != nil {
-		log.Fatal("token.txt read error:", err)
-	}
-
-	token := strings.Trim(string(fileData), " \n")
-	byteToken, err := hex.DecodeString(token)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if stateStarted, err = encrypt(byteToken, []byte("started")); err != nil {
-		log.Fatal(err)
-	}
-	if stateDestory, err = encrypt(byteToken, []byte("destroy")); err != nil {
-		log.Fatal(err)
-	}
-	if stateStopped, err = encrypt(byteToken, []byte("stopped")); err != nil {
-		log.Fatal(err)
-	}
-
-	if bytes.Equal(checkState(), stateStopped) {
-		parsedRunCommand := strings.Fields(runCommand)
-
-		cmd := exec.Command(parsedRunCommand[0], parsedRunCommand[1:]...)
-		cmd.Dir = workingDirectory
-		_ = cmd.Start()
+	config = loadConfig()
+	if checkState() == stateStopped {
+		startServer()
 	}
 
 	go respondState()
 
 	for {
 		newState := checkState()
-		if !bytes.Equal(newState, lastState) {
-			sendState(newState, token)
-			lastState = newState
+		if newState != currentState {
+			currentState = newState
+			sendState()
 		}
-
 		time.Sleep(time.Second * 2)
 	}
 }
 
-func checkState() []byte {
-	parsedCheckCommand := strings.Fields(checkCommand)
-
-	cmd := exec.Command(parsedCheckCommand[0], parsedCheckCommand[1:]...)
-	response, _ := cmd.Output()
-	if strings.Contains(string(response), "minecraft") {
-		return stateStarted
+func loadConfig() Config {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if _, err := os.Stat(flagFile); !os.IsNotExist(err) {
-		return stateDestory
+	data, err := ioutil.ReadFile(dir + "/config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var loadedConfig Config
+	err = json.Unmarshal(data, &loadedConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	loadedConfig.EncryptionKeyBytes, err = hex.DecodeString(loadedConfig.EncryptionKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return loadedConfig
+}
+
+func checkState() string {
+	checkCommand := strings.Fields(config.Check.Command)
+
+	cmd := exec.Command(checkCommand[0], checkCommand[1:]...)
+	cmd.Dir = config.WorkingDirectory
+	response, _ := cmd.Output()
+	if strings.Contains(string(response), config.Check.Contains) {
+		return stateStarted
 	}
 
 	return stateStopped
 }
 
-func sendState(state []byte, token string) {
+func startServer() {
+	runCommand := strings.Fields(config.StartCommand)
+
+	cmd := exec.Command(runCommand[0], runCommand[1:]...)
+	cmd.Dir = config.WorkingDirectory
+	_ = cmd.Start()
+}
+
+func stopServer() {
+	stopCommand := strings.Fields(config.StopCommand)
+
+	cmd := exec.Command(stopCommand[0], stopCommand[1:]...)
+	cmd.Dir = config.WorkingDirectory
+	_ = cmd.Start()
+}
+
+func sendState() {
 	for i := 0; i < 3; i++ {
-		conn, err := net.Dial("tcp", masterAddress+":"+commPort)
+		conn, err := net.Dial("tcp", config.MasterAddress+":"+
+			config.CommunicationsPort)
 		if err != nil {
 			log.Println("Could not connect to master:", err)
 			time.Sleep(time.Second)
 			continue
 		}
 
-		_, err = conn.Write(state)
+		data, err := encrypt(config.EncryptionKeyBytes, []byte(currentState))
+		if err != nil {
+			log.Println("Could not encrypt message:", err)
+			return
+		}
+
+		_, err = conn.Write(data)
 		if err != nil {
 			log.Println("Could not send message to master:", err)
 			conn.Close()
@@ -122,7 +144,7 @@ func sendState(state []byte, token string) {
 }
 
 func respondState() {
-	listener, err := net.Listen("tcp", ":"+commPort)
+	listener, err := net.Listen("tcp", ":"+config.CommunicationsPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,9 +158,36 @@ func respondState() {
 		go func(conn net.Conn) {
 			defer conn.Close()
 
-			_, err = conn.Write(lastState)
+			data, err := encrypt(config.EncryptionKeyBytes,
+				[]byte(currentState))
+			if err != nil {
+				log.Println("Could not encrypt message:", err)
+				return
+			}
+
+			_, err = conn.Write(data)
 			if err != nil {
 				log.Println("Failed to write response:", err)
+				return
+			}
+
+			command, err := ioutil.ReadAll(conn)
+			if err != nil {
+				log.Println("Failed to read message from master:", err)
+				return
+			}
+
+			decrypted, err := decrypt(config.EncryptionKeyBytes, command)
+			if err != nil {
+				log.Println("Failed to decrypt message from master:", err)
+				return
+			}
+
+			if string(decrypted) == "stop" {
+				log.Println("Received request to stop.")
+				stopServer()
+			} else {
+				log.Println("Received unknown command:", decrypted)
 			}
 		}(conn)
 	}
