@@ -19,11 +19,10 @@ func trackForwardDisconnect(ipAddress string, duration time.Duration) {
 	resolvedIP := strings.Split(ipAddress, ":")[0]
 	for _, server := range allServers {
 		if server.IPAddress == resolvedIP {
-			server.NumConnections--
 			if duration > time.Second*20 {
-				server.Log("connection", "Resetting last connection time")
 				server.LastConnectionTime = time.Now()
 			}
+			server.NumConnections--
 			break
 		}
 	}
