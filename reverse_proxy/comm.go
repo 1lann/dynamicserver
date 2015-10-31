@@ -28,9 +28,9 @@ func (s *Server) IsMinecraftServerRunning() bool {
 	defer conn.Close()
 	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
-	data, _ := ioutil.ReadAll(conn)
-	if len(data) == 0 {
-		s.Log("communications", "Failed to read response from remote.")
+	data, err := ioutil.ReadAll(conn)
+	if err != nil {
+		s.Log("communications", "Failed to read response from remote:", err)
 		return false
 	}
 
@@ -61,6 +61,11 @@ func (s *Server) IsMinecraftServerResponding() bool {
 	handshake.WriteUInt16(25565)
 	handshake.WriteVarInt(1)
 	if err := stream.WritePacket(handshake); err != nil {
+		return false
+	}
+
+	request := protocol.NewPacketWithId(0x00)
+	if err := stream.WritePacket(request); err != nil {
 		return false
 	}
 
@@ -180,7 +185,11 @@ func handleConnection(conn net.Conn) {
 	server.Log("communications", "Received request:", request)
 	switch request {
 	case "started":
-		server.SetState(stateStarted)
+		if server.IsMinecraftServerResponding() {
+			server.SetState(stateStarted)
+		} else {
+			server.SetState(stateUnavailable)
+		}
 	case "stopped":
 		if notifyStopped {
 			notifyStopped = false
