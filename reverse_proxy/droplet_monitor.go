@@ -59,7 +59,9 @@ func runDropletCheck() (delay time.Duration) {
 			continue
 		}
 
-		if server.IsMinecraftServerResponding() {
+		if server.IsMinecraftServerResponding() &&
+			server.State != stateShutdown && server.State != stateSnapshot &&
+			server.State != stateDestroy {
 			server.SetState(stateStarted)
 			continue
 		}

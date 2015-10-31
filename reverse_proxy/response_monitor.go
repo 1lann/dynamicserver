@@ -49,7 +49,8 @@ func startResponseMonitor() {
 
 			if server.IsMinecraftServerResponding() {
 				if server.State != stateShutdown &&
-					server.State != stateSnapshot {
+					server.State != stateSnapshot &&
+					server.State != stateDestroy {
 					server.SetState(stateStarted)
 				}
 			} else {
