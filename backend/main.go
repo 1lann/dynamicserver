@@ -166,13 +166,11 @@ func respondState() {
 				return
 			}
 
-			_, err = conn.Write(data)
+			_, err = conn.Write(append(data, '\n'))
 			if err != nil {
 				log.Println("Failed to write response:", err)
 				return
 			}
-
-			conn.Write([]byte{'\n'})
 
 			conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 			command, err := ioutil.ReadAll(conn)
