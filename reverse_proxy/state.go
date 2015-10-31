@@ -10,9 +10,7 @@ type state int
 
 const (
 	stateInitializing = iota
-	stateStopped
 	stateOff
-	stateStartShutdown
 	stateShutdown
 	stateSnapshot
 	stateDestroy
@@ -25,8 +23,6 @@ func (s state) String() string {
 	switch s {
 	case stateInitializing:
 		return "Intializing"
-	case stateStopped:
-		return "Stopped"
 	case stateOff:
 		return "Off"
 	case stateSnapshot:
@@ -60,13 +56,7 @@ func (s *Server) SetState(st state) {
 		s.PingStatus.Message = chat.Format(s.Messages.ServerInfoPrefix) +
 			chat.Yellow + "Initializing..."
 		s.PingStatus.ShowConnection = false
-	case stateStopped:
-		s.ConnectMessage = "Sorry, the server is intentionally down.\n" +
-			"Contact Chuie for more information."
-		s.PingStatus.Message = chat.Format(s.Messages.ServerInfoPrefix) +
-			chat.Red + "Intentionally down."
-		s.PingStatus.ShowConnection = false
-	case stateShutdown, stateSnapshot, stateDestroy, stateStartShutdown:
+	case stateShutdown, stateSnapshot, stateDestroy:
 		s.ConnectMessage = "Sorry, the server is currently shutting down.\n" +
 			"You may start it again when it is completely powered off."
 		s.PingStatus.Message = chat.Format(s.Messages.ServerInfoPrefix) +
@@ -84,8 +74,8 @@ func (s *Server) SetState(st state) {
 			chat.LightGreen + "Starting up..."
 		s.PingStatus.ShowConnection = false
 	case stateUnavailable:
-		s.ConnectMessage = "The server is unavailable due to an error.\n" +
-			"Contact Chuie for help."
+		s.ConnectMessage = "The server isn't unavailable right now.\n" +
+			"Contact " + s.Messages.Owner + " for help."
 		s.PingStatus.Message = chat.Format(s.Messages.ServerInfoPrefix) +
 			chat.Red + "Unavailable."
 		s.PingStatus.ShowConnection = false

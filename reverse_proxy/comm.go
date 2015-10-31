@@ -188,7 +188,7 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		server.SetState(stateStopped)
+		server.SetState(stateUnavailable)
 	default:
 		server.Log("communications", "Unknown request:", request)
 	}

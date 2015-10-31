@@ -53,7 +53,7 @@ func loadConfig() Config {
 	}
 
 	newConfig.EncryptionKeyBytes, err =
-		hex.DecodeString(globalConfig.EncryptionKey)
+		hex.DecodeString(newConfig.EncryptionKey)
 	if err != nil {
 		Fatal("config", "Invalid 256-bit base16 encoded encryption key!")
 	}

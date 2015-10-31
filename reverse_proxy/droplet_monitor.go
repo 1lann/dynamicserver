@@ -95,7 +95,7 @@ func runDropletCheck() (delay time.Duration) {
 		case actionErrored:
 			server.SetState(stateUnavailable)
 		case actionRunning:
-			server.SetState(stateStopped)
+			server.SetState(stateUnavailable)
 		}
 	}
 
@@ -171,7 +171,7 @@ func getRunningAction(server *Server, dropletStatus string) (int, error) {
 	case "create":
 		return actionCreate, nil
 	case "snapshot":
-		if server.State != stateStopped {
+		if server.State != stateUnavailable {
 			return actionSnapshot, nil
 		} else {
 			return actionRunning, nil
