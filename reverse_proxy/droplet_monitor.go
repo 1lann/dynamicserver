@@ -62,10 +62,6 @@ func runDropletCheck() (delay time.Duration) {
 		if server.IsMinecraftServerResponding() {
 			server.SetState(stateStarted)
 			continue
-		} else if server.State != stateStarting &&
-			server.State != stateShutdown {
-			server.SetState(stateUnavailable)
-			continue
 		}
 
 		event, err := getRunningAction(server, droplet.Status)
