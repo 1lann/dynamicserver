@@ -28,9 +28,9 @@ func (s *Server) IsMinecraftServerRunning() bool {
 	defer conn.Close()
 	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
-	data, err := ioutil.ReadAll(conn)
-	if err != nil {
-		s.Log("communications", "Failed to read response from remote:", err)
+	data, _ := ioutil.ReadAll(conn)
+	if len(data) == 0 {
+		s.Log("communications", "Failed to read response from remote.")
 		return false
 	}
 

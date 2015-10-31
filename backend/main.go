@@ -77,7 +77,8 @@ func loadConfig() Config {
 		log.Fatal(err)
 	}
 
-	loadedConfig.EncryptionKeyBytes, err = hex.DecodeString(loadedConfig.EncryptionKey)
+	loadedConfig.EncryptionKeyBytes, err =
+		hex.DecodeString(loadedConfig.EncryptionKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -172,8 +173,7 @@ func respondState() {
 			}
 
 			command, err := ioutil.ReadAll(conn)
-			if err != nil {
-				log.Println("Failed to read message from master:", err)
+			if len(command) == 0 {
 				return
 			}
 
