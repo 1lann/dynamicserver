@@ -1,24 +1,27 @@
 package main
 
 import (
+	"strings"
 	"time"
 )
 
 func trackForwardConnect(ipAddress string) {
+	resolvedIP := strings.Split(ipAddress, ":")[0]
 	for _, server := range allServers {
-		if server.IPAddress == ipAddress {
+		if server.IPAddress == resolvedIP {
 			server.NumConnections++
 			break
 		}
 	}
 }
 
-func trackForwardDisconnect(ipAddress string) {
+func trackForwardDisconnect(ipAddress string, duration time.Duration) {
+	resolvedIP := strings.Split(ipAddress, ":")[0]
 	for _, server := range allServers {
-		if server.IPAddress == ipAddress {
+		if server.IPAddress == resolvedIP {
 			server.NumConnections--
-			if server.NumConnections == 0 {
-				server.Log("connection", "All players have left.")
+			if duration > time.Second*20 {
+				server.Log("connection", "Resetting last connection time")
 				server.LastConnectionTime = time.Now()
 			}
 			break
