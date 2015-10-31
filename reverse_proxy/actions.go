@@ -16,6 +16,7 @@ func (s *Server) Shutdown() {
 
 	s.SetState(stateShutdown)
 	s.StopMinecraftServer()
+	s.SetState(stateShutdown)
 
 	for i := 0; i < 3; i++ {
 		s.Log("shutdown", "Attempting to shutdown:", s.Name)

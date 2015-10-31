@@ -48,7 +48,10 @@ func startResponseMonitor() {
 			server.StateLock.Lock()
 
 			if server.IsMinecraftServerResponding() {
-				server.SetState(stateStarted)
+				if server.State != stateShutdown &&
+					server.State != stateSnapshot {
+					server.SetState(stateStarted)
+				}
 			} else {
 				if server.State == stateStarted {
 					server.SetState(stateUnavailable)
