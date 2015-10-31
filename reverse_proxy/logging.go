@@ -5,13 +5,16 @@ import (
 )
 
 func (s *Server) Log(module string, message ...interface{}) {
-	log.Println(s.Name+" | "+module+" |", message)
+	log.Println(append([]interface{}{s.Name + " | " + module + " |"},
+		message...)...)
 }
 
 func Log(module string, message ...interface{}) {
-	log.Println("ALL SERVERS | "+module+" |", message)
+	log.Println(append([]interface{}{"general | " + module + " |"},
+		message...)...)
 }
 
 func Fatal(module string, message ...interface{}) {
-	log.Fatal("ALL SERVERS | "+module+" |", message)
+	log.Fatal(append([]interface{}{"general | " + module + " |"},
+		message...)...)
 }

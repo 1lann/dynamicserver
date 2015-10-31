@@ -151,7 +151,7 @@ func handleConnection(conn net.Conn) {
 	}
 
 	if server == nil {
-		Log("communications", "Attempted connection from unknown IP: ",
+		Log("communications", "Attempted connection from unknown IP:",
 			remoteAddr)
 		return
 	}

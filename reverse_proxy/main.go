@@ -43,6 +43,7 @@ func main() {
 	globalConfig.APIToken = config.APIToken
 
 	loadConfig()
+	loadDoClient()
 
 	handler.OnForwardConnect = trackForwardConnect
 	handler.OnForwardDisconnect = trackForwardDisconnect

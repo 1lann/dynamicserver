@@ -10,7 +10,7 @@ import (
 
 type ConfigServer struct {
 	Name                string   `json:"name"`
-	Hostnames           []string `json:"hostname"`
+	Hostnames           []string `json:"hostnames"`
 	MaxPlayers          int      `json:"max_players"`
 	AutoShutdownMinutes int      `json:"auto_shutdown_minutes"`
 	Droplet             struct {
@@ -24,7 +24,7 @@ type ConfigServer struct {
 		ServerInfoPrefix string `json:"server_info_prefix"`
 		BootTime         string `json:"boot_time"`
 	} `json:"messages"`
-	Whitelist []string
+	Whitelist []string `json:"start_whitelist"`
 }
 
 type Config struct {

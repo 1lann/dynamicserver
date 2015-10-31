@@ -116,7 +116,7 @@ func getDropletsList(dropletPrefixes []string) ([]dropletState, error) {
 	var droplets []godo.Droplet
 
 	droplets, _, err := doClient.Droplets.List(opt)
-	if err == nil {
+	if err != nil {
 		return []dropletState{}, err
 	}
 
@@ -125,8 +125,7 @@ func getDropletsList(dropletPrefixes []string) ([]dropletState, error) {
 	for _, prefix := range dropletPrefixes {
 		for _, droplet := range droplets {
 			if droplet.Name == prefix+"-automated" {
-				dropletInfo := dropletState{Droplet: droplet}
-				dropletInfo.exists = true
+				dropletInfo := dropletState{Droplet: droplet, exists: true}
 				automatedDroplets = append(automatedDroplets, dropletInfo)
 				break
 			}

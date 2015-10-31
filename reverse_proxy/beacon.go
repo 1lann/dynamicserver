@@ -32,24 +32,13 @@ func (s *Server) StartServerHandler(player *handler.Player) string {
 			"Sorry, you are not whitelisted to start the server!"
 	}
 
-	s.Restore()
+	go s.Restore()
 
-	return s.Messages.MessagePrefix +
+	return chat.Format(s.Messages.MessagePrefix) +
 		"The server is now starting. Come back in about " +
 		chat.Format(s.Messages.BootTime) + "."
 
 }
-
-// func responseDispatcher(ipAddress string, player *handler.Player) string {
-// 	for _, server := range allServers {
-// 		if server.IPAddress == ipAddress {
-// 			return server.ResponseHandler(player)
-// 		}
-// 	}
-
-// 	return "[ Reverse Proxy Error ]\n\n" +
-// 		"Sorry, the server at this hostname could not be found."
-// }
 
 func (s *Server) ResponseHandler(player *handler.Player) string {
 	return chat.Format(s.Messages.MessagePrefix + s.ConnectMessage)
