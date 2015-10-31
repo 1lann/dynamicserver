@@ -51,5 +51,6 @@ func main() {
 	go startBeacon()
 	go startDropletMonitor()
 	go startConnectionMonitor()
+	go startResponseMonitor()
 	startComm()
 }

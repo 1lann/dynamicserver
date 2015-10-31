@@ -92,7 +92,7 @@ func (s *Server) Snapshot() {
 			continue
 		}
 
-		s.Log("snapshot", "Created snapshot: minecraft-", snapshotTime)
+		s.Log("snapshot", "Created snapshot with time:", snapshotTime)
 		break
 	}
 

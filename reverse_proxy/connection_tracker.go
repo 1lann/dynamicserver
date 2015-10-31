@@ -18,6 +18,7 @@ func trackForwardDisconnect(ipAddress string) {
 		if server.IPAddress == ipAddress {
 			server.NumConnections--
 			if server.NumConnections == 0 {
+				server.Log("connection", "All players have left.")
 				server.LastConnectionTime = time.Now()
 			}
 			break
