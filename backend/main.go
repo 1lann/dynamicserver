@@ -172,6 +172,9 @@ func respondState() {
 				return
 			}
 
+			conn.Write([]byte{'\n'})
+
+			conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 			command, err := ioutil.ReadAll(conn)
 			if len(command) == 0 {
 				return

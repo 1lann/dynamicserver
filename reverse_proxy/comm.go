@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -26,15 +27,18 @@ func (s *Server) IsMinecraftServerRunning() bool {
 	}
 
 	defer conn.Close()
+	reader := bufio.NewReader(conn)
+
 	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
-	data, err := ioutil.ReadAll(conn)
+	data, err := reader.ReadBytes('\n')
 	if err != nil {
 		s.Log("communications", "Failed to read response from remote:", err)
 		return false
 	}
 
-	decrypted, err := decrypt(globalConfig.EncryptionKeyBytes, data)
+	decrypted, err := decrypt(globalConfig.EncryptionKeyBytes,
+		data[:len(data)-1])
 	if err != nil {
 		s.Log("communications", "Failed to decrypt response:", err)
 	}
