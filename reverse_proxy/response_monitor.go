@@ -57,5 +57,7 @@ func startResponseMonitor() {
 
 			server.StateLock.Unlock()
 		}
+
+		time.Sleep(time.Second * 5)
 	}
 }
