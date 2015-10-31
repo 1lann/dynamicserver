@@ -8,39 +8,122 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"strings"
 	"time"
 )
 
-const commPort = "9010"
+var notifyStopped = false
+var notifyChannel chan interface{}
 
-func runCommDaemon() {
-	listener, err := net.Listen("tcp", ":"+commPort)
+func (s *Server) IsMinecraftServerRunning() bool {
+	conn, err := net.Dial("tcp",
+		s.IPAddress+":"+globalConfig.CommunicationsPort)
 	if err != nil {
-		log.Fatal(err)
+		s.Log("communications", "Failed to connect to remote:", err)
+		return false
+	}
+
+	defer conn.Close()
+
+	data, err := ioutil.ReadAll(conn)
+	if err != nil {
+		s.Log("communications", "Failed to read response from remote:", err)
+		return false
+	}
+
+	decrypted, err := decrypt(globalConfig.EncryptionKeyBytes, data)
+	if err != nil {
+		s.Log("communications", "Failed to decrypt response:", err)
+	}
+
+	if string(decrypted) == "started" {
+		return true
+	}
+
+	return false
+}
+
+func (s *Server) StopMinecraftServer() {
+	for i := 0; i < 3; i++ {
+		conn, err := net.Dial("tcp",
+			s.IPAddress+":"+globalConfig.CommunicationsPort)
+		if err != nil {
+			s.Log("communications", "Failed to connect to remote:", err)
+			continue
+		}
+
+		defer conn.Close()
+
+		data, err := encrypt(globalConfig.EncryptionKeyBytes, []byte("stop"))
+		if err != nil {
+			s.Log("communications", "Failed to encrypt stop message:", err)
+			return
+		}
+
+		_, err = conn.Write(data)
+		if err != nil {
+			s.Log("communications", "Failed to send stop message:", err)
+			continue
+		}
+
+		break
+	}
+
+	notifyChannel = make(chan interface{})
+
+	go func() {
+		time.Sleep(time.Second * 30)
+
+		if notifyStopped {
+			notifyStopped = false
+			close(notifyChannel)
+		}
+	}()
+
+	notifyStopped = true
+	<-notifyChannel
+}
+
+func startComm() {
+	listener, err := net.Listen("tcp", ":"+globalConfig.CommunicationsPort)
+	if err != nil {
+		Fatal("communications", "Failed to listen:", err)
 	}
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal(err)
+			Log("communications", "Communications stopped due to an error:",
+				err)
+			return
 		}
 
-		go handleCommConnection(conn)
+		go handleConnection(conn)
 	}
 }
 
-func handleCommConnection(conn net.Conn) {
+func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
-	if remoteAddr != forwardAddr {
+
+	// Check IP address
+	var server *Server
+	for _, checkServer := range allServers {
+		if checkServer.IPAddress == remoteAddr {
+			server = checkServer
+			break
+		}
+	}
+
+	if server == nil {
+		Log("communications", "Attempted connection from unknown IP: ",
+			remoteAddr)
 		return
 	}
 
-	if currentState == stateDestroy || currentState == stateSnapshot {
+	if server.State == stateDestroy || server.State == stateSnapshot {
 		// Ignore request, you're about to be crushed!
 		return
 	}
@@ -49,68 +132,33 @@ func handleCommConnection(conn net.Conn) {
 
 	data, err := ioutil.ReadAll(conn)
 	if err != nil {
-		log.Println("[Comm] Error receiving request from remote:", err)
+		server.Log("communications",
+			"Error receiving request from remote:", err)
 		return
 	}
 
-	decryptedData, err := decrypt(doTokenBytes, data)
+	decryptedData, err := decrypt(globalConfig.EncryptionKeyBytes, data)
 	if err != nil {
-		log.Println("[Comm] Decryption failed.")
+		server.Log("communications", "Decryption failed.")
 		return
 	}
 
 	request := string(decryptedData)
-	log.Println("[Comm] Receive request:", request)
+	server.Log("communications", "Received request:", request)
 	switch request {
 	case "started":
-		forwardAddr = strings.Split(conn.RemoteAddr().String(), ":")[0]
-		setState(stateStarted)
+		server.SetState(stateStarted)
 	case "stopped":
-		setState(stateStopped)
-	case "destroy":
-		go shutdownServer()
+		if notifyStopped {
+			notifyStopped = false
+			close(notifyChannel)
+			return
+		}
+
+		server.SetState(stateStopped)
 	default:
-		log.Println("[Comm] Unknown request:" + request)
+		server.Log("communications", "Unknown request:", request)
 	}
-
-	return
-}
-
-func isMinecraftServerRunning() bool {
-	// Returns whether the minecraft server is running.
-	for i := 0; i < 3; i++ {
-		conn, err := net.Dial("tcp", forwardAddr+":"+commPort)
-		if err != nil {
-			log.Println("[Comm] Error connecting to remote:", err)
-			time.Sleep(time.Second)
-			continue
-		}
-
-		conn.SetReadDeadline(time.Now().Add(time.Second * 5))
-
-		data, err := ioutil.ReadAll(conn)
-		if err != nil {
-			log.Println("[Comm] Error pinging remote:", err)
-			return false
-		}
-
-		decryptedData, err := decrypt(doTokenBytes, data)
-		if err != nil {
-			log.Println("[Comm] Decryption failed.")
-			return false
-		}
-
-		conn.Close()
-
-		response := string(decryptedData)
-		if response == "started" {
-			return true
-		} else {
-			return false
-		}
-	}
-
-	return false
 }
 
 // Encrypt and decrypt functions from
