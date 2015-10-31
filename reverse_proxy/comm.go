@@ -172,7 +172,7 @@ func handleConnection(conn net.Conn) {
 
 	decryptedData, err := decrypt(globalConfig.EncryptionKeyBytes, data)
 	if err != nil {
-		server.Log("communications", "Decryption failed.")
+		server.Log("communications", "Decryption failed:", err)
 		return
 	}
 

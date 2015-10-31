@@ -41,8 +41,8 @@ func main() {
 	globalConfig.CommunicationsPort = config.CommunicationsPort
 	globalConfig.EncryptionKey = config.EncryptionKey
 	globalConfig.APIToken = config.APIToken
+	globalConfig.EncryptionKeyBytes = config.EncryptionKeyBytes
 
-	loadConfig()
 	loadDoClient()
 
 	handler.OnForwardConnect = trackForwardConnect
