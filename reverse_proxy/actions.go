@@ -10,9 +10,7 @@ var failureWait = time.Second * 5
 
 func (s *Server) Shutdown() {
 	s.StateLock.Lock()
-	defer func() {
-		s.StateLock.Unlock()
-	}()
+	defer s.StateLock.Unlock()
 
 	s.SetState(stateShutdown)
 	s.StopMinecraftServer()
@@ -29,7 +27,6 @@ func (s *Server) Shutdown() {
 		}
 
 		s.Log("shutdown", "Shutdown successful.")
-
 		return
 	}
 
@@ -146,7 +143,7 @@ func (s *Server) Snapshot() {
 			}
 
 			if earliestIndex >= 0 {
-				s.Log("snapshot", "Removing snapshot: minecraft-",
+				s.Log("snapshot", "Removing snapshot with time:",
 					earliestSnapshot.time)
 				_, err := doClient.Images.Delete(earliestSnapshot.id)
 				if err != nil {

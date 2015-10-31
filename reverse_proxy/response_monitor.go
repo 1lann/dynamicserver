@@ -7,12 +7,14 @@ import (
 )
 
 func (s *Server) IsMinecraftServerResponding() bool {
-	conn, err := net.Dial("tcp", s.IPAddress+":25565")
+	conn, err := net.DialTimeout("tcp", s.IPAddress+":25565", time.Second*5)
 	if err != nil {
 		return false
 	}
 
 	defer conn.Close()
+
+	conn.SetDeadline(time.Now().Add(time.Second * 5))
 
 	stream := protocol.NewStream(conn)
 	handshake := protocol.NewPacketWithId(0x00)
@@ -29,7 +31,8 @@ func (s *Server) IsMinecraftServerResponding() bool {
 		return false
 	}
 
-	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	conn.SetDeadline(time.Now().Add(time.Second * 5))
+
 	_, length, err := stream.GetPacketStream()
 	if err != nil {
 		return false
