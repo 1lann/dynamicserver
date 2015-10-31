@@ -123,16 +123,21 @@ func getDropletsList(dropletPrefixes []string) ([]dropletState, error) {
 	var automatedDroplets []dropletState
 
 	for _, prefix := range dropletPrefixes {
+		found := false
+
 		for _, droplet := range droplets {
 			if droplet.Name == prefix+"-automated" {
 				dropletInfo := dropletState{Droplet: droplet, exists: true}
 				automatedDroplets = append(automatedDroplets, dropletInfo)
+				found = true
 				break
 			}
 		}
 
-		automatedDroplets = append(automatedDroplets,
-			dropletState{exists: false})
+		if !found {
+			automatedDroplets = append(automatedDroplets,
+				dropletState{exists: false})
+		}
 	}
 
 	return automatedDroplets, nil
