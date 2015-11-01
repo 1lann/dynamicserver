@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,33 +51,14 @@ func main() {
 
 	go respondState()
 
-	go func() {
-		for {
-			newState := checkState()
-			if newState != currentState {
-				currentState = newState
-				sendState()
-			}
-			time.Sleep(time.Second * 2)
+	for {
+		newState := checkState()
+		if newState != currentState {
+			currentState = newState
+			sendState()
 		}
-	}()
-
-	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Stopping from HTTP")
-		stopServer()
-	})
-
-	http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Starting from HTTP")
-		startServer()
-	})
-
-	http.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Shutdown from HTTP")
-		shutdownServer()
-	})
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+		time.Sleep(time.Second * 2)
+	}
 }
 
 func loadConfig() Config {
@@ -121,6 +101,7 @@ func checkState() string {
 }
 
 func startServer() {
+	log.Println("Executing command:", config.StartCommand)
 	runCommand := strings.Fields(config.StartCommand)
 
 	cmd := exec.Command(runCommand[0], runCommand[1:]...)
@@ -129,6 +110,7 @@ func startServer() {
 }
 
 func stopServer() {
+	log.Println("Executing command:", config.StopCommand)
 	stopCommand := strings.Fields(config.StopCommand)
 
 	cmd := exec.Command(stopCommand[0], stopCommand[1:]...)
@@ -137,7 +119,9 @@ func stopServer() {
 }
 
 func shutdownServer() {
+	log.Println("Executing command:", config.ShutdownCommand)
 	shutdownCommand := strings.Fields(config.ShutdownCommand)
+
 	cmd := exec.Command(shutdownCommand[0], shutdownCommand[1:]...)
 	_ = cmd.Start()
 }
