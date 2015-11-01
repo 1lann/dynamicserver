@@ -161,7 +161,7 @@ func getRunningAction(server *Server, dropletStatus string) (int, error) {
 		return actionErrored, nil
 	}
 
-	if actions[0].Status == "completed" && dropletStatus == "active" {
+	if actions[0].Status == "completed" {
 		if server.State == stateShutdown {
 			return actionShuttingDown, nil
 		}
@@ -171,6 +171,9 @@ func getRunningAction(server *Server, dropletStatus string) (int, error) {
 
 	switch actions[0].Type {
 	case "create":
+		if actions[0].Status == "completed" && dropletStatus == "off" {
+			return actionUnknown, nil
+		}
 		return actionCreate, nil
 	case "snapshot":
 		if server.State != stateUnavailable {
