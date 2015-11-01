@@ -50,30 +50,7 @@ func (s *Server) IsMinecraftServerRunning() bool {
 }
 
 func (s *Server) StopMinecraftServer() {
-	for i := 0; i < 3; i++ {
-		conn, err := net.Dial("tcp",
-			s.IPAddress+":"+globalConfig.CommunicationsPort)
-		if err != nil {
-			s.Log("communications", "Failed to connect to remote:", err)
-			continue
-		}
-
-		defer conn.Close()
-
-		data, err := encrypt(globalConfig.EncryptionKeyBytes, []byte("stop"))
-		if err != nil {
-			s.Log("communications", "Failed to encrypt stop message:", err)
-			return
-		}
-
-		_, err = conn.Write(data)
-		if err != nil {
-			s.Log("communications", "Failed to send stop message:", err)
-			continue
-		}
-
-		break
-	}
+	s.TellRemote("stop")
 
 	notifyChannel = make(chan interface{})
 
@@ -88,6 +65,33 @@ func (s *Server) StopMinecraftServer() {
 
 	notifyStopped = true
 	<-notifyChannel
+}
+
+func (s *Server) TellRemote(message string) {
+	for i := 0; i < 3; i++ {
+		conn, err := net.DialTimeout("tcp",
+			s.IPAddress+":"+globalConfig.CommunicationsPort, time.Second*5)
+		if err != nil {
+			s.Log("communications", "Failed to connect to remote:", err)
+			continue
+		}
+
+		defer conn.Close()
+
+		data, err := encrypt(globalConfig.EncryptionKeyBytes, []byte(message))
+		if err != nil {
+			s.Log("communications", "Failed to encrypt stop message:", err)
+			return
+		}
+
+		_, err = conn.Write(data)
+		if err != nil {
+			s.Log("communications", "Failed to send stop message:", err)
+			continue
+		}
+
+		break
+	}
 }
 
 func startComm() {

@@ -9,29 +9,12 @@ import (
 var failureWait = time.Second * 5
 
 func (s *Server) Shutdown() {
-	s.StateLock.Lock()
-	defer s.StateLock.Unlock()
-
+	s.Log("shutdown", "Shutting down server...")
 	s.SetState(stateShutdown)
 	s.StopMinecraftServer()
 	s.SetState(stateShutdown)
-
-	for i := 0; i < 3; i++ {
-		s.Log("shutdown", "Attempting to shutdown:", s.Name)
-
-		_, _, err := doClient.DropletActions.Shutdown(s.DropletId)
-		if err != nil {
-			s.Log("shutdown", "Failed to shutdown droplet:", err)
-			time.Sleep(failureWait)
-			continue
-		}
-
-		s.Log("shutdown", "Shutdown successful.")
-		return
-	}
-
-	s.Log("shutdown", "Giving up shutdown.")
-	s.SetState(stateUnavailable)
+	s.TellRemote("shutdown")
+	s.Log("shutdown", "Shutdown complete.")
 }
 
 func (s *Server) Destroy() {
