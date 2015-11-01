@@ -14,7 +14,7 @@ func (s *Server) Shutdown() {
 	s.StopMinecraftServer()
 	s.SetState(stateShutdown)
 	s.TellRemote("shutdown")
-	s.Log("shutdown", "Shutdown complete.")
+	s.Log("shutdown", "Waiting for power off.")
 }
 
 func (s *Server) Destroy() {
@@ -73,7 +73,7 @@ func (s *Server) Snapshot() {
 			continue
 		}
 
-		s.Log("snapshot", "Created snapshot with time:", snapshotTime)
+		s.Log("snapshot", "Creating snapshot with time:", snapshotTime)
 		break
 	}
 

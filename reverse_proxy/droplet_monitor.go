@@ -91,6 +91,11 @@ func runDropletCheck() (delay time.Duration) {
 		case actionErrored:
 			server.SetState(stateUnavailable)
 		case actionRunning:
+			if server.State == stateSnapshot {
+				go server.Destroy()
+				break
+			}
+
 			if server.IsMinecraftServerRunning() {
 				server.SetState(stateStarting)
 			} else {
