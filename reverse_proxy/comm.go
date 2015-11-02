@@ -132,6 +132,10 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 
+	if !server.Available {
+		return
+	}
+
 	if server.State == stateDestroy || server.State == stateSnapshot {
 		// Ignore request, you're about to be crushed!
 		return

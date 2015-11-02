@@ -48,6 +48,10 @@ func (s *Server) IsMinecraftServerResponding() bool {
 func startResponseMonitor() {
 	for {
 		for _, server := range allServers {
+			if !server.Available {
+				continue
+			}
+
 			server.StateLock.Lock()
 
 			if server.IsMinecraftServerResponding() {

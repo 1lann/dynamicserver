@@ -18,11 +18,16 @@ func startBeacon() {
 
 func (s *Server) StartServerHandler(player *handler.Player) string {
 	whitelisted := false
-	for _, whitelisedName := range s.Whitelist {
-		if strings.EqualFold(whitelisedName, player.Username) {
-			whitelisted = true
-			break
+
+	if len(s.Whitelist) > 0 {
+		for _, whitelisedName := range s.Whitelist {
+			if strings.EqualFold(whitelisedName, player.Username) {
+				whitelisted = true
+				break
+			}
 		}
+	} else {
+		whitelisted = true
 	}
 
 	if !whitelisted {

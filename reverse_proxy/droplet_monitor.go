@@ -28,8 +28,11 @@ func runDropletCheck() (delay time.Duration) {
 	serverPrefixes := make([]string, len(allServers))
 
 	for i, server := range allServers {
-		server.StateLock.Lock()
-		defer server.StateLock.Unlock()
+		if server.Available {
+			server.StateLock.Lock()
+			defer server.StateLock.Unlock()
+		}
+
 		serverPrefixes[i] = server.Name
 	}
 
@@ -41,6 +44,10 @@ func runDropletCheck() (delay time.Duration) {
 
 	for i, droplet := range droplets {
 		server := allServers[i]
+		if !server.Available {
+			continue
+		}
+
 		if !droplet.exists {
 			server.SetState(stateOff)
 			continue

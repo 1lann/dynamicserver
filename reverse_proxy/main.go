@@ -33,7 +33,12 @@ func main() {
 			MaxPlayers:    server.MaxPlayers,
 			OnlinePlayers: 0,
 		}
-		newServer.SetState(stateInitializing)
+
+		if server.Available {
+			newServer.SetState(stateUnavailable)
+		} else {
+			newServer.SetState(stateInitializing)
+		}
 
 		allServers = append(allServers, newServer)
 	}
@@ -43,6 +48,7 @@ func main() {
 	globalConfig.APIToken = config.APIToken
 	globalConfig.EncryptionKeyBytes = config.EncryptionKeyBytes
 
+	watchConfig()
 	loadDoClient()
 
 	handler.OnForwardConnect = trackForwardConnect

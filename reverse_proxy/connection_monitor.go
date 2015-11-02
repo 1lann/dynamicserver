@@ -31,7 +31,9 @@ func trackForwardDisconnect(ipAddress string, duration time.Duration) {
 func startConnectionMonitor() {
 	for {
 		for _, server := range allServers {
-			checkServerConnections(server)
+			if server.Available {
+				checkServerConnections(server)
+			}
 		}
 
 		time.Sleep(time.Minute)
