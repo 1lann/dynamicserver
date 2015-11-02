@@ -35,9 +35,10 @@ func main() {
 		}
 
 		if server.Available {
-			newServer.SetState(stateUnavailable)
-		} else {
 			newServer.SetState(stateInitializing)
+		} else {
+			server.Log("Server set as not available.")
+			newServer.SetState(stateUnavailable)
 		}
 
 		allServers = append(allServers, newServer)
@@ -48,7 +49,7 @@ func main() {
 	globalConfig.APIToken = config.APIToken
 	globalConfig.EncryptionKeyBytes = config.EncryptionKeyBytes
 
-	go watchConfig()
+	watchConfig()
 	loadDoClient()
 
 	handler.OnForwardConnect = trackForwardConnect
