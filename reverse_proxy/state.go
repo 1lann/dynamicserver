@@ -45,6 +45,10 @@ func (s *Server) SetState(st state) {
 		return
 	}
 
+	s.setStateRaw(st)
+}
+
+func (s *Server) setStateRaw(st state) {
 	if s.State == stateStarted || s.State == stateOff {
 		handler.Handle(s.Hostnames, s.ResponseHandler)
 	}

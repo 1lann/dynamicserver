@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"github.com/1lann/beacon/handler"
 	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
 	"os"
@@ -122,6 +123,12 @@ func liveLoadConfig() {
 
 		if newServer.Available {
 			currentServer.Available = true
+			currentServer.setStateRaw(currentServer.State)
+
+			if currentServer.State != stateStarted {
+				handler.Handle(currentServer.Hostnames,
+					currentServer.ResponseHandler)
+			}
 		} else {
 			currentServer.Available = false
 			currentServer.SetState(stateUnavailable)
