@@ -137,8 +137,6 @@ func watchConfig() {
 		Fatal("config watcher", err)
 	}
 
-	defer watcher.Close()
-
 	go func() {
 		for {
 			select {
