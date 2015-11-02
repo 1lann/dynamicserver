@@ -37,7 +37,7 @@ func main() {
 		if server.Available {
 			newServer.SetState(stateInitializing)
 		} else {
-			newServer.Log("Server set as not available.")
+			newServer.Log("main", "Server set as not available.")
 			newServer.SetState(stateUnavailable)
 		}
 
