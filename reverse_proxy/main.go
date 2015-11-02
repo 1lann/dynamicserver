@@ -48,7 +48,7 @@ func main() {
 	globalConfig.APIToken = config.APIToken
 	globalConfig.EncryptionKeyBytes = config.EncryptionKeyBytes
 
-	watchConfig()
+	go watchConfig()
 	loadDoClient()
 
 	handler.OnForwardConnect = trackForwardConnect
@@ -58,5 +58,7 @@ func main() {
 	go startDropletMonitor()
 	go startConnectionMonitor()
 	go startResponseMonitor()
+
+	Log("main", "Initialized.")
 	startComm()
 }
