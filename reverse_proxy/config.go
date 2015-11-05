@@ -125,7 +125,8 @@ func liveLoadConfig() {
 			currentServer.Available = true
 			currentServer.setStateRaw(currentServer.State)
 
-			if currentServer.State != stateStarted {
+			if currentServer.State != stateStarted &&
+				currentServer.State != stateOff {
 				handler.Handle(currentServer.Hostnames,
 					currentServer.ResponseHandler)
 			}
