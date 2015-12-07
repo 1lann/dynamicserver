@@ -37,7 +37,7 @@ func (s *Server) StartServerHandler(player *handler.Player) string {
 			"Sorry, you are not whitelisted to start the server!"
 	}
 
-	s.Log(player.Username + " started the server.")
+	s.Log("beacon", player.Username+" started the server.")
 
 	go s.Restore()
 

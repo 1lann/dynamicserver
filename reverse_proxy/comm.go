@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-var notifyStopped = false
-var notifyChannel chan interface{}
-
 func (s *Server) IsMinecraftServerRunning() bool {
 	conn, err := net.Dial("tcp",
 		s.IPAddress+":"+globalConfig.CommunicationsPort)
@@ -52,19 +49,19 @@ func (s *Server) IsMinecraftServerRunning() bool {
 func (s *Server) StopMinecraftServer() {
 	s.TellRemote("stop")
 
-	notifyChannel = make(chan interface{})
+	s.notifyChannel = make(chan interface{})
 
 	go func() {
 		time.Sleep(time.Second * 30)
 
-		if notifyStopped {
-			notifyStopped = false
-			close(notifyChannel)
+		if s.notifyStopped {
+			s.notifyStopped = false
+			close(s.notifyChannel)
 		}
 	}()
 
-	notifyStopped = true
-	<-notifyChannel
+	s.notifyStopped = true
+	<-s.notifyChannel
 }
 
 func (s *Server) TellRemote(message string) {
@@ -166,9 +163,9 @@ func handleConnection(conn net.Conn) {
 			server.SetState(stateStarting)
 		}
 	case "stopped":
-		if notifyStopped {
-			notifyStopped = false
-			close(notifyChannel)
+		if server.notifyStopped {
+			server.notifyStopped = false
+			close(server.notifyChannel)
 			return
 		}
 

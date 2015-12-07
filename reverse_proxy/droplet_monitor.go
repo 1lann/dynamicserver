@@ -66,6 +66,12 @@ func runDropletCheck() (delay time.Duration) {
 			continue
 		}
 
+		if droplet.Status == "active" && server.State == stateShutdown &&
+			time.Now().After(server.ShutdownDeadline) {
+			go server.ForceShutdown()
+			continue
+		}
+
 		if server.IsMinecraftServerResponding() &&
 			server.State != stateShutdown && server.State != stateSnapshot &&
 			server.State != stateDestroy {

@@ -121,6 +121,8 @@ func liveLoadConfig() {
 		currentServer.Droplet = newServer.Droplet
 		currentServer.AutoShutdownMinutes = newServer.AutoShutdownMinutes
 
+		currentServer.PingStatus.MaxPlayers = currentServer.MaxPlayers
+
 		if newServer.Available {
 			currentServer.Available = true
 			currentServer.setStateRaw(currentServer.State)

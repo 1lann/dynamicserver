@@ -78,7 +78,7 @@ func (s *Server) setStateRaw(st state) {
 			chat.LightGreen + "Starting up..."
 		s.PingStatus.ShowConnection = false
 	case stateUnavailable:
-		s.ConnectMessage = "The server isn't unavailable right now.\n" +
+		s.ConnectMessage = "The server isn't available right now.\n" +
 			"Contact " + s.Messages.Owner + " for help."
 		s.PingStatus.Message = chat.Format(s.Messages.ServerInfoPrefix) +
 			chat.Red + "Unavailable."

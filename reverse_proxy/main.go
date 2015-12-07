@@ -16,7 +16,10 @@ type Server struct {
 	StateLock          *sync.Mutex
 	DropletId          int
 	LastConnectionTime time.Time
+	ShutdownDeadline   time.Time
 	NumConnections     int
+	notifyStopped      bool
+	notifyChannel      chan interface{}
 }
 
 var globalConfig Config

@@ -9,12 +9,32 @@ import (
 var failureWait = time.Second * 5
 
 func (s *Server) Shutdown() {
+	s.ShutdownDeadline = time.Now().Add(time.Minute * 5)
 	s.Log("shutdown", "Shutting down server...")
 	s.SetState(stateShutdown)
 	s.StopMinecraftServer()
 	s.SetState(stateShutdown)
 	s.TellRemote("shutdown")
+	s.ShutdownDeadline = time.Now().Add(time.Minute)
 	s.Log("shutdown", "Waiting for power off.")
+}
+
+func (s *Server) ForceShutdown() {
+	s.ShutdownDeadline = time.Now().Add(time.Minute * 10)
+
+	s.Log("force shutdown", "WARNING: Force shutting down:", s.DropletId)
+
+	for i := 0; i < 3; i++ {
+		_, _, err := doClient.DropletActions.PowerOff(s.DropletId)
+		if err != nil {
+			s.Log("force shutdown", "Error while force shutting down:", err)
+			continue
+		}
+
+		return
+	}
+
+	s.Log("force shutdown", "Giving up forced shutdown.")
 }
 
 func (s *Server) Destroy() {
