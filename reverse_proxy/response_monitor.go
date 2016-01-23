@@ -17,7 +17,7 @@ func (s *Server) IsMinecraftServerResponding() bool {
 	conn.SetDeadline(time.Now().Add(time.Second * 5))
 
 	stream := protocol.NewStream(conn)
-	handshake := protocol.NewPacketWithId(0x00)
+	handshake := protocol.NewPacketWithID(0x00)
 	handshake.WriteVarInt(5)
 	handshake.WriteString(s.IPAddress)
 	handshake.WriteUInt16(25565)
@@ -26,7 +26,7 @@ func (s *Server) IsMinecraftServerResponding() bool {
 		return false
 	}
 
-	request := protocol.NewPacketWithId(0x00)
+	request := protocol.NewPacketWithID(0x00)
 	if err := stream.WritePacket(request); err != nil {
 		return false
 	}
