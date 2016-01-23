@@ -62,7 +62,9 @@ func main() {
 	go startDropletMonitor()
 	go startConnectionMonitor()
 	go startResponseMonitor()
+	go startComm()
 
 	Log("main", "Initialized.")
-	startComm()
+
+	startWebInterface()
 }

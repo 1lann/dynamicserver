@@ -109,7 +109,7 @@ func liveLoadConfig() {
 		currentServer := allServers[i]
 
 		if currentServer.Name != newServer.Name {
-			Log("config", "The servers have been reordered or renamed."+
+			Log("config", "The servers have been reordered or renamed. "+
 				"You must restart the reverse proxy for changes to take place.")
 			continue
 		}
