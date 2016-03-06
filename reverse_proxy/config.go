@@ -68,7 +68,7 @@ func loadConfig() Config {
 func liveLoadConfig() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		Log("lconfig", "Could not resolve filepath:", err)
+		Log("config", "Could not resolve filepath:", err)
 		return
 	}
 

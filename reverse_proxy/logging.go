@@ -15,6 +15,6 @@ func Log(module string, message ...interface{}) {
 }
 
 func Fatal(module string, message ...interface{}) {
-	log.Fatal(append([]interface{}{"general | " + module + " |"},
+	log.Fatal(append([]interface{}{"general | " + module + " | "},
 		message...)...)
 }
