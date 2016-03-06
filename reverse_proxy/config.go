@@ -15,6 +15,7 @@ type ConfigServer struct {
 	Available           bool     `json:"available"`
 	Hostnames           []string `json:"hostnames"`
 	MaxPlayers          int      `json:"max_players"`
+	ProtocolNumber      int      `json:"protocol_number"`
 	AutoShutdownMinutes int      `json:"auto_shutdown_minutes"`
 	Droplet             struct {
 		Memory         string `json:"memory"`
@@ -118,10 +119,12 @@ func liveLoadConfig() {
 		currentServer.Whitelist = newServer.Whitelist
 		currentServer.Hostnames = newServer.Hostnames
 		currentServer.MaxPlayers = newServer.MaxPlayers
+		currentServer.ProtocolNumber = newServer.ProtocolNumber
 		currentServer.Droplet = newServer.Droplet
 		currentServer.AutoShutdownMinutes = newServer.AutoShutdownMinutes
 
 		currentServer.PingStatus.MaxPlayers = currentServer.MaxPlayers
+		currentServer.PingStatus.ProtocolNumber = currentServer.ProtocolNumber
 
 		if newServer.Available {
 			currentServer.Available = true

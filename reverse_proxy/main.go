@@ -33,8 +33,9 @@ func main() {
 		newServer := &Server{ConfigServer: server, StateLock: &sync.Mutex{}}
 
 		newServer.PingStatus = ping.Status{
-			MaxPlayers:    server.MaxPlayers,
-			OnlinePlayers: 0,
+			MaxPlayers:     server.MaxPlayers,
+			OnlinePlayers:  0,
+			ProtocolNumber: server.ProtocolNumber,
 		}
 
 		if server.Available {
