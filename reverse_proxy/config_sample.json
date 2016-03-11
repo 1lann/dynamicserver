@@ -1,0 +1,43 @@
+{
+	"servers": [
+		{
+			"name": "vanilla",
+			"available": true,
+			"hostnames": ["mc.domain.com", "play.domain.com"],
+			"max_players": 30,
+			"auto_shutdown_minutes": 30,
+			"droplet": {
+				"region": "sgp1",
+				"memory": "1gb",
+				"ssh_fingerprint": "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+			},
+			"messages": {
+				"server_info_prefix": "&3[ my mc network | &evanilla&3 ]\n&7Status: ",
+				"message_prefix": "&3-- [ my mc network | &evanilla&3 ] --&f\n\n",
+				"owner": "Steve",
+				"boot_time": "3 minutes"
+			},
+			"start_whitelist": ["Herobrine", "Notch"] // Omit to allow anyone
+		},
+		{
+			"name": "tekkit",
+			"available": true,
+			"hostnames": ["tekkit.domain.com"],
+			"max_players": 10,
+			"auto_shutdown_minutes": 30,
+			"droplet": {
+				"region": "sgp1",
+				"memory": "2gb",
+				"ssh_fingerprint": "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+			},
+			"messages": {
+				"server_info_prefix": "&3[ my mc network | &7tekkit ]\n&7Status: ",
+				"message_prefix": "&3-- [ my mc network | &7tekkit ] --&f\n\n",
+				"owner": "Steve",
+				"boot_time": "5 minutes"
+			},
+		}
+	],
+	"communications_port": "9010",
+	"api_token": "your digitalocean api token here"
+}

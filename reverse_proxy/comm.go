@@ -2,12 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"encoding/base64"
-	"errors"
-	"io"
 	"io/ioutil"
 	"net"
 	"strings"
@@ -33,13 +27,7 @@ func (s *Server) IsMinecraftServerRunning() bool {
 		return false
 	}
 
-	decrypted, err := decrypt(globalConfig.EncryptionKeyBytes,
-		data[:len(data)-1])
-	if err != nil {
-		s.Log("communications", "Failed to decrypt response:", err)
-	}
-
-	if string(decrypted) == "started" {
+	if string(data[:len(data)-1]) == "started" {
 		return true
 	}
 
@@ -75,13 +63,7 @@ func (s *Server) TellRemote(message string) {
 
 		defer conn.Close()
 
-		data, err := encrypt(globalConfig.EncryptionKeyBytes, []byte(message))
-		if err != nil {
-			s.Log("communications", "Failed to encrypt stop message:", err)
-			return
-		}
-
-		_, err = conn.Write(data)
+		_, err = conn.Write([]byte(message))
 		if err != nil {
 			s.Log("communications", "Failed to send stop message:", err)
 			continue
@@ -147,13 +129,7 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 
-	decryptedData, err := decrypt(globalConfig.EncryptionKeyBytes, data)
-	if err != nil {
-		server.Log("communications", "Decryption failed:", err)
-		return
-	}
-
-	request := string(decryptedData)
+	request := string(data)
 	server.Log("communications", "Received request:", request)
 	switch request {
 	case "started":
@@ -173,41 +149,4 @@ func handleConnection(conn net.Conn) {
 	default:
 		server.Log("communications", "Unknown request:", request)
 	}
-}
-
-// Encrypt and decrypt functions from
-// http://stackoverflow.com/questions/18817336/golang-encrypting-a-string-with-aes-and-base64
-func encrypt(key, text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	b := base64.StdEncoding.EncodeToString(text)
-	ciphertext := make([]byte, aes.BlockSize+len(b))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return ciphertext, nil
-}
-
-func decrypt(key, text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	if len(text) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
-	}
-	iv := text[:aes.BlockSize]
-	text = text[aes.BlockSize:]
-	cfb := cipher.NewCFBDecrypter(block, iv)
-	cfb.XORKeyStream(text, text)
-	data, err := base64.StdEncoding.DecodeString(string(text))
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }

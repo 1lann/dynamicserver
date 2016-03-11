@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"github.com/1lann/beacon/handler"
 	"gopkg.in/fsnotify.v1"
@@ -34,9 +33,7 @@ type ConfigServer struct {
 type Config struct {
 	APIToken           string         `json:"api_token"`
 	CommunicationsPort string         `json:"communications_port"`
-	EncryptionKey      string         `json:"encryption_key"`
 	Servers            []ConfigServer `json:"servers"`
-	EncryptionKeyBytes []byte         `json:"-"`
 }
 
 func loadConfig() Config {
@@ -54,12 +51,6 @@ func loadConfig() Config {
 	err = json.Unmarshal(data, &newConfig)
 	if err != nil {
 		Fatal("config", "Failed to decode configuration:", err)
-	}
-
-	newConfig.EncryptionKeyBytes, err =
-		hex.DecodeString(newConfig.EncryptionKey)
-	if err != nil {
-		Fatal("config", "Invalid 256-bit base16 encoded encryption key!")
 	}
 
 	return newConfig
@@ -89,11 +80,6 @@ func liveLoadConfig() {
 		Log("config", "Number of servers have changed. "+
 			"You must restart the reverse proxy for changes to take place.")
 		return
-	}
-
-	if newConfig.EncryptionKey != globalConfig.EncryptionKey {
-		Log("config", "The encryption key has changed. You must restart "+
-			"the server to use the new encryption key.")
 	}
 
 	if newConfig.APIToken != globalConfig.APIToken {
