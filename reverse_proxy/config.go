@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type ConfigServer struct {
@@ -57,6 +58,7 @@ func loadConfig() Config {
 }
 
 func liveLoadConfig() {
+	time.Sleep(time.Second * 3)
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		Log("config", "Could not resolve filepath:", err)
