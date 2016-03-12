@@ -34,7 +34,7 @@ The front end server is what people will connect to start the servers and route 
 
 1. Download the sample front end configuration from [here](https://github.com/1lann/dynamicserver/blob/master/reverse_proxy/config_sample.json).
 2. Rename it to `config.json`.
-3. Edit the configuration to fit your needs. Configuration documentation is available here.
+3. Edit the configuration to fit your needs. Configuration documentation is available [here](https://github.com/1lann/dynamicserver/wiki/Front-end-configuration).
 4. Download the `reverse_proxy` front end software and make sure it's in the same directory as `config.json`
 4. Execute `reverse_proxy`. You may want to add it as a service to run on boot.
 5. If no errors appear, you're done! Now to setup the back end servers.
@@ -50,12 +50,12 @@ The back end server is what the actual Minecraft server is running on. You need 
 7. Download the sample back end configuration from [here](https://github.com/1lann/dynamicserver/blob/master/backend/config_sample.json).
 8. Rename it to `config.json`.
 6. Download/upload the `backend` software onto the server and make sure it's in the same directory as `config.json`.
-9. Fill in the configuration to fit your needs. Configuration documentation is available here.
+9. Fill in the configuration to fit your needs. Configuration documentation is available [here](https://github.com/1lann/dynamicserver/wiki/Back-end-configuration).
 10. Make sure that the back end helper runs on startup. I do this by adding `/path/to/backend >> /path/to/backend.log 2>&1 &` to `/etc/rc.local`, which also writes logs to `/path/to/backend.log`.
 12. Make sure your manually started minecraft server is not running.
 11. Run `backend`, which should also start your minecraft server, and see if it is recognised by the front end server by adding the server's hostname to your Minecraft server list.
 12. If the server appears on the list, and has the same status message specified in server.properties, then it is working!
-13. If the server does not appear on the list, or the status is "Powered off", "Unavailable", or is stuck on "Starting up...", there may be an issue with your configuration. See troubleshooting for more help.
+13. If the server does not appear on the list, or the status is "Powered off", "Unavailable", or is stuck on "Starting up...", there may be an issue with your configuration. See [troubleshooting](https://github.com/1lann/dynamicserver/wiki/Troubleshooting) for more help.
 14. Try connecting to the server and play on it for a bit, then leave it and wait for the auto shutdown duration specified in your front end server's configuration, and see if it automatically shuts down!
 15. If everything appears to be working, congratulations! You've set up an automatically managed dynamically launching Minecraft server.
 
