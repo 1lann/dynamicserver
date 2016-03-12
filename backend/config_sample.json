@@ -1,0 +1,12 @@
+{
+	"master_address": "0.0.0.0",
+	"communications_port": "9010",
+	"working_directory": "/root/minecraft",
+	"start_command": "screen -dmS minecraft java -Xmx850M -jar /root/minecraft/minecraft.jar",
+	"stop_command": "screen -S minecraft -X stuff \"stop\n\"",
+	"shutdown_command": "shutdown -P now",
+	"check": {
+		"command": "screen -list",
+		"contains": "minecraft"
+	}
+}

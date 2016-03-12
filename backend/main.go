@@ -17,6 +17,8 @@ const (
 	stateStopped = "stopped"
 )
 
+const version = "0.1"
+
 var currentState string
 var config Config
 var isStopping bool
@@ -39,6 +41,8 @@ func main() {
 	if checkState() == stateStopped {
 		startServer()
 	}
+
+	log.Println("Initialized dynamicserver backend v" + version + ".")
 
 	go respondState()
 

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const version = "0.1"
+
 type Server struct {
 	ConfigServer
 	IPAddress          string
@@ -62,6 +64,6 @@ func main() {
 	go startConnectionMonitor()
 	go startResponseMonitor()
 
-	Log("main", "Initialized.")
+	Log("main", "Initialized dynamicserver reverse proxy v"+version+".")
 	startComm()
 }
